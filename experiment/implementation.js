@@ -6,7 +6,7 @@ this.emailTranslator = class extends ExtensionCommon.ExtensionAPI {
     getAPI() {
         return {
             emailTranslator: {
-                async injectSplitView(text, lang) {
+                async injectSplitView(html, text, lang) {
                     try {
                         const win = findMailWindow();
                         if (!win) return { ok: false, error: "No mail:3pane window found" };
@@ -18,7 +18,7 @@ this.emailTranslator = class extends ExtensionCommon.ExtensionAPI {
                         const body = doc.body || doc.querySelector("body");
                         if (!body) return { ok: false, error: `Document exists but no body. ${info}` };
 
-                        applySplitView(doc, body, text, lang);
+                        applySplitView(doc, body, html, text, lang);
                         return { ok: true, info };
                     } catch (e) {
                         return { ok: false, error: `Exception: ${e.message} @ ${e.fileName}:${e.lineNumber}` };
@@ -76,13 +76,15 @@ function getDoc(browser) {
 
 // ── Split view DOM manipulation ───────────────────────────────────────────────
 
-function applySplitView(doc, body, text, lang) {
+function applySplitView(doc, body, html, text, lang) {
     // If already split, just update the right panel content
+    const translationContent = html || buildParagraphs(text);
+
     if (doc.getElementById("et-right")) {
         const badge = doc.getElementById("et-lang");
         if (badge) badge.textContent = langLabel(lang);
         const bodyEl = doc.getElementById("et-body");
-        if (bodyEl) bodyEl.innerHTML = buildParagraphs(text);
+        if (bodyEl) bodyEl.innerHTML = translationContent;
         return;
     }
 
@@ -104,7 +106,7 @@ function applySplitView(doc, body, text, lang) {
             Hungarian Translation
             <span id="et-lang">${langLabel(lang)}</span>
         </div>
-        <div id="et-body">${buildParagraphs(text)}</div>`;
+        <div id="et-body">${translationContent}</div>`;
 
     body.appendChild(left);
     body.appendChild(divider);

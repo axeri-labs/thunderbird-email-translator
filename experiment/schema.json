@@ -9,8 +9,9 @@
         "description": "Splits the message pane and shows the translation on the right.",
         "async": true,
         "parameters": [
-          { "name": "text", "type": "string" },
-          { "name": "lang", "type": "string" }
+          { "name": "html",  "type": "string" },
+          { "name": "text",  "type": "string" },
+          { "name": "lang",  "type": "string" }
         ]
       }
     ]

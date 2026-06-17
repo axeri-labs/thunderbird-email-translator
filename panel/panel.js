@@ -18,7 +18,7 @@ if (mailTabs.length) {
 // ── Main flow ─────────────────────────────────────────────────────────────────
 
 async function run(tabId, message) {
-    const cacheKey = `tr_${message.id}`;
+    const cacheKey = `tr2_${message.id}`;
     const cached   = await messenger.storage.local.get(cacheKey);
     const translation = cached[cacheKey] ?? await fetchTranslation(message);
     if (!translation) return;
@@ -27,26 +27,36 @@ async function run(tabId, message) {
         await messenger.storage.local.set({ [cacheKey]: translation });
     }
 
-    // Inject split view into the message pane via privileged experiment API
     try {
-        const result = await messenger.emailTranslator.injectSplitView(
-            translation.text, translation.lang
+        await messenger.emailTranslator.injectSplitView(
+            translation.html ?? "",
+            translation.text ?? "",
+            translation.lang
         );
-        if (result.ok) {
-            // Split view injected — also show in popup for reference
-        }
     } catch (e) {
-        console.warn("Email Translator: experiment API not available, using popup fallback.", e.message);
+        console.warn("Email Translator: experiment API not available.", e.message);
     }
 
-    showResult(translation.text, translation.lang);
+    showResult(translation);
 }
 
 async function fetchTranslation(message) {
     showLoading();
     try {
         const fullMessage = await messenger.messages.getFull(message.id);
-        const emailText   = extractPlainText(fullMessage);
+
+        // Structure-preserving HTML translation (keeps images, tables, styles)
+        const rawHtml = extractHtml(fullMessage);
+        if (rawHtml) {
+            const bodyHtml = htmlBodyContent(rawHtml);
+            if (bodyHtml.trim().length > 10) {
+                const translation = await translateHtmlPreservingStructure(bodyHtml);
+                if (translation) return translation;
+            }
+        }
+
+        // Fall back to plain text
+        const emailText = extractPlainText(fullMessage);
         if (!emailText || emailText.trim().length < 3) {
             throw new Error("The email body is empty or could not be extracted.");
         }
@@ -68,21 +78,20 @@ function showLoading() {
         </div>`;
 }
 
-function showResult(text, lang) {
-    let label;
-    if (lang && lang !== "hu")  label = lang.toUpperCase() + " → HU";
-    else if (lang === "hu")     label = "already Hungarian";
-    else                        label = "→ HU";
-    langInfo.textContent = label;
+function showResult(translation) {
+    const { text, html, lang } = translation;
+    if (lang && lang !== "hu")  langInfo.textContent = lang.toUpperCase() + " → HU";
+    else if (lang === "hu")     langInfo.textContent = "already Hungarian";
+    else                        langInfo.textContent = "→ HU";
 
-    const paragraphs = (text || "")
-        .split(/\n+/)
-        .map(l => l.trim())
-        .filter(l => l.length > 0);
-
-    content.innerHTML = paragraphs.length === 0
-        ? "<p><em>(Empty translation received.)</em></p>"
-        : paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join("");
+    if (html) {
+        content.innerHTML = html;
+    } else {
+        const paras = (text || "").split(/\n+/).map(l => l.trim()).filter(Boolean);
+        content.innerHTML = paras.length
+            ? paras.map(p => `<p>${escapeHtml(p)}</p>`).join("")
+            : "<p><em>(Empty translation received.)</em></p>";
+    }
 }
 
 function showError(msg) {
@@ -90,7 +99,24 @@ function showError(msg) {
     content.innerHTML = `<div class="error">⚠ ${escapeHtml(msg)}</div>`;
 }
 
-// ── Text extraction ───────────────────────────────────────────────────────────
+// ── HTML / text extraction ────────────────────────────────────────────────────
+
+function extractHtml(part) {
+    if (!part) return "";
+    if (part.contentType === "text/html" && part.body) return part.body;
+    if (part.parts?.length > 0) {
+        for (const sub of part.parts) {
+            const h = extractHtml(sub);
+            if (h) return h;
+        }
+    }
+    return "";
+}
+
+function htmlBodyContent(html) {
+    const m = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    return m ? m[1] : html;
+}
 
 function stripHtml(html) {
     return html
@@ -129,7 +155,64 @@ function extractPlainText(part) {
     return "";
 }
 
+// ── Structure-preserving HTML translation ─────────────────────────────────────
+//
+// Strategy:
+//   1. Parse original HTML, remove style/script (not images or layout)
+//   2. Walk all text nodes; wrap each in <span id="tN">text</span>
+//   3. Send only the compact tagged string to Google Translate
+//      (GT preserves span tags and id attributes)
+//   4. Parse the translated result; extract text per span ID
+//   5. Replace text nodes in the ORIGINAL DOM with the translations
+//   6. Return the modified original HTML — structure/images unchanged
+
+async function translateHtmlPreservingStructure(originalHtml) {
+    const parser = new DOMParser();
+    const origDoc = parser.parseFromString(originalHtml, "text/html");
+    origDoc.querySelectorAll("style, script").forEach(e => e.remove());
+
+    // Collect non-whitespace text nodes
+    const textNodes = [];
+    const walker = origDoc.createTreeWalker(origDoc.body, NodeFilter.SHOW_TEXT, null);
+    let node;
+    while ((node = walker.nextNode())) {
+        if (node.nodeValue.trim().length > 0) textNodes.push(node);
+    }
+    if (textNodes.length === 0) return null;
+
+    // Build compact tagged HTML: <span id="t0">Hello</span> <span id="t1">World</span>
+    const tagged = textNodes
+        .map((n, i) => `<span id="t${i}">${escapeHtml(n.nodeValue)}</span>`)
+        .join(" ");
+
+    // Translate — GT preserves <span id="..."> wrappers
+    const { html: translatedHtml, lang } = await translateHtml(tagged);
+
+    // Parse translated result and apply text back to original DOM nodes
+    const transDoc = parser.parseFromString(translatedHtml, "text/html");
+    for (let i = 0; i < textNodes.length; i++) {
+        const span = transDoc.getElementById(`t${i}`);
+        if (span) textNodes[i].nodeValue = span.textContent;
+    }
+
+    return { html: origDoc.body.innerHTML, lang };
+}
+
 // ── Google Translate (unofficial, free) ───────────────────────────────────────
+
+async function translateHtml(html) {
+    const MAX = 8000;
+    const q   = html.length > MAX ? html.substring(0, MAX) : html;
+    const params = new URLSearchParams({ client: "gtx", sl: "auto", tl: "hu", dt: "t", q });
+    const res  = await fetch("https://translate.googleapis.com/translate_a/single?" + params);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const data = await res.json();
+    if (!data || !Array.isArray(data[0])) throw new Error("Unexpected response from translation service.");
+    return {
+        html: data[0].filter(i => i?.[0]).map(i => i[0]).join(""),
+        lang: data[2] ?? "unknown"
+    };
+}
 
 async function translateText(text) {
     const MAX = 4800;
