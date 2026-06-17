@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Kék háttér -->
+  <rect width="48" height="48" rx="9" fill="#0055aa"/>
+
+  <!-- Nyíl balra-jobbra (fordítás szimbólum) -->
+  <line x1="8" y1="20" x2="40" y2="20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <polyline points="34,14 40,20 34,26" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="14,22 8,28 14,34" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="8" y1="28" x2="40" y2="28" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- HU felirat -->
+  <text x="24" y="44" text-anchor="middle" fill="#aaccff" font-size="7" font-weight="bold" font-family="Arial, sans-serif" letter-spacing="1">HU</text>
+</svg>
