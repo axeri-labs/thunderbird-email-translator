@@ -81,14 +81,17 @@ function applySplitView(doc, body, html, text, lang) {
     const translationContent = html || buildParagraphs(text);
 
     if (doc.getElementById("et-right")) {
-        const badge = doc.getElementById("et-lang");
-        if (badge) badge.textContent = langLabel(lang);
         const bodyEl = doc.getElementById("et-body");
         if (bodyEl) bodyEl.innerHTML = translationContent;
         return;
     }
 
-    injectStyles(doc);
+    // Capture original body appearance before we overwrite its styles
+    const view = doc.defaultView || doc.ownerGlobal;
+    const cs = view ? view.getComputedStyle(body) : null;
+    const origBg = cs ? cs.backgroundColor : null;
+
+    injectStyles(doc, origBg);
 
     // Move existing body children to the left column
     const left = doc.createElement("div");
@@ -100,13 +103,7 @@ function applySplitView(doc, body, html, text, lang) {
 
     const right = doc.createElement("div");
     right.id = "et-right";
-    right.innerHTML = `
-        <div id="et-header">
-            <span id="et-hu-badge">HU</span>
-            Hungarian Translation
-            <span id="et-lang">${langLabel(lang)}</span>
-        </div>
-        <div id="et-body">${translationContent}</div>`;
+    right.innerHTML = `<div id="et-body">${translationContent}</div>`;
 
     body.appendChild(left);
     body.appendChild(divider);
@@ -139,26 +136,22 @@ function esc(s) {
             .replaceAll(">","&gt;").replaceAll('"',"&quot;");
 }
 
-function injectStyles(doc) {
+function injectStyles(doc, origBg) {
     if (doc.getElementById("et-styles")) return;
     const style = doc.createElement("style");
     style.id = "et-styles";
+
+    const isTransparent = !origBg || origBg === "rgba(0, 0, 0, 0)" || origBg === "transparent";
+    const bg = isTransparent ? "" : `background:${origBg};`;
+
     style.textContent = `
         #et-left  { flex:1 1 50%; overflow-y:auto; height:100%; min-width:0; }
-        #et-divider { flex:0 0 4px; background:#0055aa; cursor:col-resize; height:100%; }
+        #et-divider { flex:0 0 4px; background:#000000; cursor:col-resize; height:100%; }
         #et-right { flex:1 1 50%; display:flex; flex-direction:column; height:100%;
-                    min-width:0; background:#eef5ff;
-                    font-family:-apple-system,"Segoe UI",Arial,sans-serif; font-size:13px; color:#111; }
-        #et-header { background:#0055aa; color:#fff; padding:8px 12px;
-                     display:flex; align-items:center; gap:7px;
-                     font-weight:600; flex-shrink:0; }
-        #et-hu-badge { background:#cc0000; color:#fff; font-size:11px; font-weight:bold;
-                       border-radius:3px; padding:1px 5px; }
-        #et-lang { font-size:11px; font-weight:normal; background:rgba(255,255,255,.2);
-                   border-radius:4px; padding:1px 6px; margin-left:auto; }
-        #et-body { flex:1; overflow-y:auto; padding:14px 16px; line-height:1.7; }
-        #et-body p { margin:0 0 9px; }
-        #et-body p:last-child { margin:0; }
+                    min-width:0; ${bg} }
+        #et-body { flex:1; overflow-y:auto; }
+        #et-body > p { margin:0 0 9px; padding:14px 16px 0; }
+        #et-body > p:last-child { margin:0; padding-bottom:14px; }
     `;
     (doc.head || doc.documentElement).appendChild(style);
 }

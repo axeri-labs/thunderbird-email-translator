@@ -18,8 +18,7 @@
     "default_title": "Translate to Hungarian",
     "default_icon": {
       "48": "icons/translate.svg"
-    },
-    "default_popup": "panel/panel.html"
+    }
   },
   "background": {
     "scripts": ["background.js"]
