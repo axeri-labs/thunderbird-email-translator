@@ -149,7 +149,7 @@ function injectStyles(doc, origBg) {
         #et-divider { flex:0 0 4px; background:#000000; cursor:col-resize; height:100%; }
         #et-right { flex:1 1 50%; display:flex; flex-direction:column; height:100%;
                     min-width:0; ${bg} }
-        #et-body { flex:1; overflow-y:auto; }
+        #et-body { flex:1; overflow:auto; }
         #et-body > p { margin:0 0 9px; padding:14px 16px 0; }
         #et-body > p:last-child { margin:0; padding-bottom:14px; }
     `;

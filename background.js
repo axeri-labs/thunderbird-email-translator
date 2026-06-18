@@ -13,7 +13,7 @@ async function run(message) {
     try {
         await messenger.emailTranslator.injectSplitView(
             "<p style='color:#777;font-style:italic'>Fordítás folyamatban…</p>",
-            "", null
+            "", ""
         );
     } catch (e) {
         console.warn("Email Translator: could not show loading state.", e.message);
@@ -32,7 +32,7 @@ async function run(message) {
         await messenger.emailTranslator.injectSplitView(
             translation.html ?? "",
             translation.text ?? "",
-            translation.lang
+            translation.lang ?? ""
         );
     } catch (e) {
         console.warn("Email Translator: experiment API not available.", e.message);
@@ -65,7 +65,7 @@ async function fetchTranslation(message) {
 
 function extractHtml(part) {
     if (!part) return "";
-    if (part.contentType === "text/html" && part.body) return part.body;
+    if (part.contentType?.startsWith("text/html") && part.body) return part.body;
     if (part.parts?.length > 0) {
         for (const sub of part.parts) {
             const h = extractHtml(sub);
@@ -100,7 +100,7 @@ function stripHtml(html) {
 
 function findPlainTextPart(parts) {
     for (const sub of parts) {
-        if (sub.contentType === "text/plain" && sub.body) return sub.body.trim();
+        if (sub.contentType?.startsWith("text/plain") && sub.body) return sub.body.trim();
     }
     for (const sub of parts) {
         const t = extractPlainText(sub);
@@ -111,9 +111,9 @@ function findPlainTextPart(parts) {
 
 function extractPlainText(part) {
     if (!part) return "";
-    if (part.contentType === "text/plain" && part.body) return part.body.trim();
+    if (part.contentType?.startsWith("text/plain") && part.body) return part.body.trim();
     if (part.parts?.length > 0) return findPlainTextPart(part.parts);
-    if (part.contentType === "text/html" && part.body) return stripHtml(part.body);
+    if (part.contentType?.startsWith("text/html") && part.body) return stripHtml(part.body);
     return "";
 }
 
