@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /home/martonlaszloattila/Documents/develop/idomero/project/cadensa-landing/)",
+      "Read(//home/martonlaszloattila/Documents/develop/idomero/project/cadensa-landing/**)"
+    ],
+    "additionalDirectories": [
+      "/home/martonlaszloattila/Documents/develop/idomero/project/cadensa-landing/lib"
+    ]
+  }
+}

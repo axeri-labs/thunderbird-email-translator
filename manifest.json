@@ -1,12 +1,12 @@
 {
   "manifest_version": 2,
   "name": "E-mail Fordító",
-  "version": "1.7.0",
-  "description": "Translates the open email to Hungarian — shows translation in a split view inside Thunderbird.",
-  "author": "kapcsolat@termuves.hu",
+  "version": "1.8.0",
+  "description": "Translates the open email to the selected language — shows translation in a split view inside Thunderbird.",
+  "author": "info@axeri.hu",
   "applications": {
     "gecko": {
-      "id": "email-fordito@termuves.hu",
+      "id": "email-fordito@axeri.hu",
       "strict_min_version": "91.0"
     }
   },
@@ -14,14 +14,18 @@
     "48": "icons/translate.svg",
     "96": "icons/translate.svg"
   },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": false
+  },
   "message_display_action": {
-    "default_title": "Translate to Hungarian",
+    "default_title": "E-mail fordítása",
     "default_icon": {
       "48": "icons/translate.svg"
     }
   },
   "background": {
-    "scripts": ["background.js"]
+    "page": "background.html"
   },
   "experiment_apis": {
     "emailTranslator": {

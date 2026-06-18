@@ -6,7 +6,7 @@ this.emailTranslator = class extends ExtensionCommon.ExtensionAPI {
     getAPI() {
         return {
             emailTranslator: {
-                async injectSplitView(html, text, lang) {
+                async injectSplitView(html, text) {
                     try {
                         const win = findMailWindow();
                         if (!win) return { ok: false, error: "No mail:3pane window found" };
@@ -18,7 +18,7 @@ this.emailTranslator = class extends ExtensionCommon.ExtensionAPI {
                         const body = doc.body || doc.querySelector("body");
                         if (!body) return { ok: false, error: `Document exists but no body. ${info}` };
 
-                        applySplitView(doc, body, html, text, lang);
+                        applySplitView(doc, body, html, text);
                         return { ok: true, info };
                     } catch (e) {
                         return { ok: false, error: `Exception: ${e.message} @ ${e.fileName}:${e.lineNumber}` };
@@ -38,17 +38,27 @@ function findMailWindow() {
 
 // ── Find the email document ───────────────────────────────────────────────────
 
-// Recursively search nested <browser> elements for the imap:// email document.
 // TB 115 Supernova renders: 3pane → about:message browser → email browser (imap://)
+// When multiple tabs are open, limit the search to the active tab's panel so we
+// don't accidentally inject into a different tab's email document.
 function findEmailDocument(win) {
+    const tabmail = win.document.getElementById("tabmail");
+    const panel = tabmail?.currentTabInfo?.panel;
+    if (panel) {
+        const result = findImapDocIn(panel, 0);
+        if (result) return result;
+    }
+
+    // Fallback: search the full window document (mail:messageWindow or no tabmail)
     const result = findImapDocIn(win.document, 0);
     if (result) return result;
     return { doc: null, info: "imap:// document not found at any nesting level" };
 }
 
-function findImapDocIn(doc, depth) {
+// root can be a Document or an Element — both support querySelectorAll
+function findImapDocIn(root, depth) {
     if (depth > 6) return null;
-    const browsers = Array.from(doc.querySelectorAll("browser"));
+    const browsers = Array.from(root.querySelectorAll("browser"));
 
     // First pass: direct match — browser whose currentURI is imap://
     for (const b of browsers) {
@@ -76,7 +86,7 @@ function getDoc(browser) {
 
 // ── Split view DOM manipulation ───────────────────────────────────────────────
 
-function applySplitView(doc, body, html, text, lang) {
+function applySplitView(doc, body, html, text) {
     // If already split, just update the right panel content
     const translationContent = html || buildParagraphs(text);
 
@@ -123,12 +133,6 @@ function buildParagraphs(text) {
     const lines = (text || "")
         .split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
     return lines.length ? lines.map(p => `<p>${esc(p)}</p>`).join("") : "<p><em>(empty)</em></p>";
-}
-
-function langLabel(lang) {
-    if (!lang || lang === "unknown") return "→ HU";
-    if (lang === "hu") return "already HU";
-    return lang.toUpperCase() + " → HU";
 }
 
 function esc(s) {

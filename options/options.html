@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8">
+    <title>E-mail Fordító – Beállítások</title>
+    <style>
+        body {
+            font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
+            color: #111;
+            background: #fff;
+            margin: 0;
+            padding: 24px 32px;
+            max-width: 480px;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 24px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 12px;
+        }
+
+        .setting {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .setting input[type="checkbox"] {
+            margin-top: 2px;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .setting label {
+            cursor: pointer;
+        }
+
+        .setting-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .setting-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        #status {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #0055aa;
+            min-height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>E-mail Fordító</h1>
+
+    <div class="setting">
+        <div style="flex:1">
+            <div class="setting-title">Célnyelv</div>
+            <div class="setting-desc">Milyen nyelvre fordítsa a kiegészítő az e-maileket?</div>
+        </div>
+        <select id="targetLang" style="margin-top:2px;font-size:14px;padding:4px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;">
+            <option value="hu">Magyar</option>
+            <option value="en">Angol</option>
+            <option value="de">Német</option>
+            <option value="fr">Francia</option>
+            <option value="es">Spanyol</option>
+            <option value="it">Olasz</option>
+            <option value="pt">Portugál</option>
+            <option value="nl">Holland</option>
+            <option value="pl">Lengyel</option>
+            <option value="cs">Cseh</option>
+            <option value="sk">Szlovák</option>
+            <option value="ro">Román</option>
+            <option value="hr">Horvát</option>
+            <option value="ru">Orosz</option>
+            <option value="uk">Ukrán</option>
+            <option value="tr">Török</option>
+            <option value="ar">Arab</option>
+            <option value="zh-CN">Kínai (egyszerűsített)</option>
+            <option value="ja">Japán</option>
+            <option value="ko">Koreai</option>
+        </select>
+    </div>
+
+    <div class="setting">
+        <input type="checkbox" id="autoTranslate">
+        <label for="autoTranslate">
+            <div class="setting-title">Automatikus fordítás</div>
+            <div class="setting-desc">Ha bekapcsolt, minden megnyitott e-mail automatikusan le lesz fordítva. Ha kikapcsolt, a fordítás csak a gomb megnyomásakor indul el.</div>
+        </label>
+    </div>
+
+    <div id="status"></div>
+
+    <script type="module" src="options.js"></script>
+</body>
+</html>

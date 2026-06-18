@@ -1,9 +1,35 @@
 "use strict";
 
+// ── Gombnyomásra indított fordítás ────────────────────────────────────────────
+
 messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
     const message = await messenger.messageDisplay.getDisplayedMessage(tab.id);
     if (!message) return;
     await run(message);
+});
+
+// ── Automatikus fordítás ──────────────────────────────────────────────────────
+
+let autoListener = null;
+
+async function updateAutoTranslate() {
+    const { autoTranslate } = await messenger.storage.local.get("autoTranslate");
+
+    if (autoTranslate && !autoListener) {
+        autoListener = async (tab, message) => {
+            if (message) await run(message);
+        };
+        messenger.messageDisplay.onMessageDisplayed.addListener(autoListener);
+    } else if (!autoTranslate && autoListener) {
+        messenger.messageDisplay.onMessageDisplayed.removeListener(autoListener);
+        autoListener = null;
+    }
+}
+
+await updateAutoTranslate();
+
+messenger.storage.onChanged.addListener((changes) => {
+    if ("autoTranslate" in changes) updateAutoTranslate();
 });
 
 // ── Main flow ─────────────────────────────────────────────────────────────────
@@ -13,15 +39,16 @@ async function run(message) {
     try {
         await messenger.emailTranslator.injectSplitView(
             "<p style='color:#777;font-style:italic'>Fordítás folyamatban…</p>",
-            "", ""
+            ""
         );
     } catch (e) {
         console.warn("Email Translator: could not show loading state.", e.message);
     }
 
-    const cacheKey = `tr2_${message.id}`;
+    const { targetLang = "hu" } = await messenger.storage.local.get("targetLang");
+    const cacheKey = `tr2_${message.id}_${targetLang}`;
     const cached = await messenger.storage.local.get(cacheKey);
-    const translation = cached[cacheKey] ?? await fetchTranslation(message);
+    const translation = cached[cacheKey] ?? await fetchTranslation(message, targetLang);
     if (!translation) return;
 
     if (!cached[cacheKey]) {
@@ -31,15 +58,14 @@ async function run(message) {
     try {
         await messenger.emailTranslator.injectSplitView(
             translation.html ?? "",
-            translation.text ?? "",
-            translation.lang ?? ""
+            translation.text ?? ""
         );
     } catch (e) {
         console.warn("Email Translator: experiment API not available.", e.message);
     }
 }
 
-async function fetchTranslation(message) {
+async function fetchTranslation(message, targetLang) {
     try {
         const fullMessage = await messenger.messages.getFull(message.id);
 
@@ -47,14 +73,14 @@ async function fetchTranslation(message) {
         if (rawHtml) {
             const bodyHtml = htmlBodyContent(rawHtml);
             if (bodyHtml.trim().length > 10) {
-                const translation = await translateHtmlPreservingStructure(bodyHtml);
+                const translation = await translateHtmlPreservingStructure(bodyHtml, targetLang);
                 if (translation) return translation;
             }
         }
 
         const emailText = extractPlainText(fullMessage);
         if (!emailText || emailText.trim().length < 3) return null;
-        return await translateText(emailText);
+        return await translateText(emailText, targetLang);
     } catch (err) {
         console.error("Email Translator:", err.message);
         return null;
@@ -65,7 +91,9 @@ async function fetchTranslation(message) {
 
 function extractHtml(part) {
     if (!part) return "";
-    if (part.contentType?.startsWith("text/html") && part.body) return part.body;
+    if (part.contentType?.startsWith("text/html") && part.body) {
+        return maybeDecodeQP(part.body);
+    }
     if (part.parts?.length > 0) {
         for (const sub of part.parts) {
             const h = extractHtml(sub);
@@ -73,6 +101,32 @@ function extractHtml(part) {
         }
     }
     return "";
+}
+
+// Quoted-printable dekódolás, ha szükséges (=3D, soft line breaks jelenlétéből detektálva)
+function maybeDecodeQP(str) {
+    if (!str.includes("=3D") && !/=\r?\n/.test(str)) return str;
+    return decodeQP(str);
+}
+
+function decodeQP(str) {
+    // Soft line break eltávolítása
+    str = str.replace(/=\r?\n/g, "");
+    // =XX sorozatok bájttá alakítása
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === "=" && i + 2 < str.length && /[0-9A-Fa-f]{2}/.test(str.slice(i + 1, i + 3))) {
+            bytes.push(Number.parseInt(str.slice(i + 1, i + 3), 16));
+            i += 2;
+        } else {
+            bytes.push((str.codePointAt(i) ?? 0) & 0xff);
+        }
+    }
+    try {
+        return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+    } catch {
+        return str;
+    }
 }
 
 function htmlBodyContent(html) {
@@ -119,7 +173,7 @@ function extractPlainText(part) {
 
 // ── Structure-preserving HTML translation ─────────────────────────────────────
 
-async function translateHtmlPreservingStructure(originalHtml) {
+async function translateHtmlPreservingStructure(originalHtml, targetLang) {
     const parser = new DOMParser();
     const origDoc = parser.parseFromString(originalHtml, "text/html");
     origDoc.querySelectorAll("style, script").forEach(e => e.remove());
@@ -136,7 +190,7 @@ async function translateHtmlPreservingStructure(originalHtml) {
         .map((n, i) => `<span id="t${i}">${escapeHtml(n.nodeValue)}</span>`)
         .join(" ");
 
-    const { html: translatedHtml, lang } = await translateHtml(tagged);
+    const { html: translatedHtml, lang } = await translateHtml(tagged, targetLang);
 
     const transDoc = parser.parseFromString(translatedHtml, "text/html");
     for (let i = 0; i < textNodes.length; i++) {
@@ -149,10 +203,10 @@ async function translateHtmlPreservingStructure(originalHtml) {
 
 // ── Google Translate ──────────────────────────────────────────────────────────
 
-async function translateHtml(html) {
+async function translateHtml(html, targetLang) {
     const MAX = 8000;
     const q = html.length > MAX ? html.substring(0, MAX) : html;
-    const params = new URLSearchParams({ client: "gtx", sl: "auto", tl: "hu", dt: "t", q });
+    const params = new URLSearchParams({ client: "gtx", sl: "auto", tl: targetLang, dt: "t", q });
     const res = await fetch("https://translate.googleapis.com/translate_a/single?" + params);
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     const data = await res.json();
@@ -163,10 +217,10 @@ async function translateHtml(html) {
     };
 }
 
-async function translateText(text) {
+async function translateText(text, targetLang) {
     const MAX = 4800;
     const q = text.length > MAX ? text.substring(0, MAX) + "\n\n[...text truncated]" : text;
-    const params = new URLSearchParams({ client: "gtx", sl: "auto", tl: "hu", dt: "t", q });
+    const params = new URLSearchParams({ client: "gtx", sl: "auto", tl: targetLang, dt: "t", q });
     const res = await fetch("https://translate.googleapis.com/translate_a/single?" + params);
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     const data = await res.json();
