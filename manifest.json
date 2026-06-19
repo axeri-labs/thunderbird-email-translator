@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "E-mail Fordító",
+  "name": "Email Translator",
   "version": "1.8.0",
   "description": "Translates the open email to the selected language — shows translation in a split view inside Thunderbird.",
   "author": "info@axeri.hu",

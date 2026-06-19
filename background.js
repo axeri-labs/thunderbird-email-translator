@@ -38,7 +38,7 @@ async function run(message) {
     // Show loading state in the split view immediately
     try {
         await messenger.emailTranslator.injectSplitView(
-            "<p style='color:#777;font-style:italic'>Fordítás folyamatban…</p>",
+            "<p style='color:#777;font-style:italic'>Translating…</p>",
             ""
         );
     } catch (e) {
