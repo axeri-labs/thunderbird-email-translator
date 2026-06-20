@@ -11,7 +11,7 @@
             background: #fff;
             margin: 0;
             padding: 24px 32px;
-            max-width: 480px;
+            max-width: 520px;
         }
 
         h1 {
@@ -30,17 +30,7 @@
             border-bottom: 1px solid #f0f0f0;
         }
 
-        .setting input[type="checkbox"] {
-            margin-top: 2px;
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-            cursor: pointer;
-        }
-
-        .setting label {
-            cursor: pointer;
-        }
+        .setting-info { flex: 1; }
 
         .setting-title {
             font-weight: 600;
@@ -52,6 +42,50 @@
             color: #666;
             line-height: 1.5;
         }
+
+        .setting input[type="checkbox"] {
+            margin-top: 2px;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .setting label { cursor: pointer; }
+
+        select, input[type="text"], input[type="password"] {
+            font-size: 14px;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        select { cursor: pointer; }
+
+        .key-field {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .key-field input {
+            flex: 1;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .key-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        #deepl-section { display: none; }
+        #deepl-section.visible { display: block; }
+        #mymemory-section { display: none; }
+        #mymemory-section.visible { display: block; }
 
         #status {
             margin-top: 16px;
@@ -65,11 +99,11 @@
     <h1>Email Translator</h1>
 
     <div class="setting">
-        <div style="flex:1">
+        <div class="setting-info">
             <div class="setting-title">Target language</div>
             <div class="setting-desc">Which language should emails be translated into?</div>
         </div>
-        <select id="targetLang" style="margin-top:2px;font-size:14px;padding:4px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;">
+        <select id="targetLang">
             <option value="hu">Hungarian</option>
             <option value="en">English</option>
             <option value="de">German</option>
@@ -90,6 +124,62 @@
             <option value="zh-CN">Chinese (Simplified)</option>
             <option value="ja">Japanese</option>
             <option value="ko">Korean</option>
+        </select>
+    </div>
+
+    <div class="setting">
+        <div class="setting-info">
+            <div class="setting-title">Translation provider</div>
+            <div class="setting-desc">
+                <strong>Google Translate</strong> — free, no account needed, auto-detects language.<br>
+                <strong>MyMemory</strong> — free, IP-based limit: ~10 requests/min, 1,000 words/day.
+                Providing your email raises the daily limit to 10,000 words/day (same IP).<br>
+                <strong>DeepL</strong> — highest quality, 500,000 characters/month free.
+                Requires a free API key from <a href="https://www.deepl.com/pro-api" target="_blank">deepl.com</a>.
+            </div>
+            <div id="mymemory-section">
+                <div class="key-field" style="margin-top:8px;">
+                    <label for="sourceLang" style="font-size:12px;color:#555;white-space:nowrap;">Email language:</label>
+                    <select id="sourceLang" style="font-size:13px;">
+                        <option value="en">English</option>
+                        <option value="de">German</option>
+                        <option value="fr">French</option>
+                        <option value="es">Spanish</option>
+                        <option value="it">Italian</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="nl">Dutch</option>
+                        <option value="pl">Polish</option>
+                        <option value="cs">Czech</option>
+                        <option value="sk">Slovak</option>
+                        <option value="ro">Romanian</option>
+                        <option value="ru">Russian</option>
+                        <option value="uk">Ukrainian</option>
+                        <option value="hu">Hungarian</option>
+                        <option value="tr">Turkish</option>
+                        <option value="ar">Arabic</option>
+                        <option value="zh-CN">Chinese (Simplified)</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                    </select>
+                </div>
+                <div class="key-hint">MyMemory requires knowing the source language — Google Translate and DeepL auto-detect it.</div>
+                <div class="key-field" style="margin-top:8px;">
+                    <label for="myMemoryEmail" style="font-size:12px;color:#555;white-space:nowrap;">Email (optional):</label>
+                    <input type="text" id="myMemoryEmail" placeholder="your@email.com" style="font-size:13px;flex:1;">
+                </div>
+                <div class="key-hint">Raises the daily limit from 1,000 to 10,000 words/day per IP. Does not affect the rate limit (~10 req/min).</div>
+            </div>
+            <div id="deepl-section">
+                <div class="key-field">
+                    <input type="password" id="deeplApiKey" placeholder="DeepL API key">
+                </div>
+                <div class="key-hint">Get a free key at deepl.com/pro-api — no credit card required.</div>
+            </div>
+        </div>
+        <select id="translationProvider">
+            <option value="google">Google Translate (free)</option>
+            <option value="mymemory">MyMemory (free)</option>
+            <option value="deepl">DeepL</option>
         </select>
     </div>
 

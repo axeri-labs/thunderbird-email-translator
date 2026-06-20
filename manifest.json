@@ -1,25 +1,25 @@
 {
   "manifest_version": 2,
   "name": "Email Translator",
-  "version": "1.8.0",
+  "version": "1.0.0",
   "description": "Translates the open email to the selected language — shows translation in a split view inside Thunderbird.",
   "author": "info@axeri.hu",
   "applications": {
     "gecko": {
       "id": "email-fordito@axeri.hu",
-      "strict_min_version": "91.0"
+      "strict_min_version": "102.0"
     }
   },
   "icons": {
-    "48": "icons/translate.svg",
-    "96": "icons/translate.svg"
+    "48": "icons/translate-48.png",
+    "96": "icons/translate-96.png"
   },
   "options_ui": {
     "page": "options/options.html",
     "open_in_tab": false
   },
   "message_display_action": {
-    "default_title": "E-mail fordítása",
+    "default_title": "Translate email",
     "default_icon": {
       "48": "icons/translate.svg"
     }
@@ -27,21 +27,13 @@
   "background": {
     "page": "background.html"
   },
-  "experiment_apis": {
-    "emailTranslator": {
-      "schema": "experiment/schema.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experiment/implementation.js",
-        "paths": [["emailTranslator"]]
-      }
-    }
-  },
   "permissions": [
     "messagesRead",
+    "messagesModify",
     "tabs",
     "storage",
-    "webNavigation",
-    "*://translate.googleapis.com/*"
+    "*://translate.googleapis.com/*",
+    "*://api.mymemory.translated.net/*",
+    "*://api-free.deepl.com/*"
   ]
 }
