@@ -42,12 +42,25 @@ function injectSplitView(html, text, banner = "") {
     const divider = document.createElement("div");
     divider.id = "et-divider";
 
+    const closeBtn = document.createElement("button");
+    closeBtn.id = "et-close";
+    closeBtn.title = "Close translation";
+    closeBtn.textContent = "✕";
+
+    const bannerEl = document.createElement("div");
+    bannerEl.id = "et-banner";
+    bannerEl.textContent = banner;
+    bannerEl.style.display = banner ? "flex" : "none";
+
+    const bodyEl = document.createElement("div");
+    bodyEl.id = "et-body";
+    bodyEl.innerHTML = content; // intentional: renders HTML email content
+
     const right = document.createElement("div");
     right.id = "et-right";
-    right.innerHTML =
-        `<button id="et-close" title="Close translation">&#x2715;</button>` +
-        `<div id="et-banner" style="display:${banner ? "flex" : "none"}">${banner}</div>` +
-        `<div id="et-body">${content}</div>`;
+    right.appendChild(closeBtn);
+    right.appendChild(bannerEl);
+    right.appendChild(bodyEl);
 
     body.appendChild(left);
     body.appendChild(divider);
@@ -57,7 +70,7 @@ function injectSplitView(html, text, banner = "") {
         "margin:0 !important; padding:0 !important; " +
         "height:100vh !important; overflow:hidden !important; box-sizing:border-box !important;";
 
-    document.getElementById("et-close").addEventListener("click", closeSplitView);
+    closeBtn.addEventListener("click", closeSplitView);
     setupResizer(divider, left, right);
 }
 
