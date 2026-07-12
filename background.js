@@ -2,7 +2,7 @@
 
 // Register the message display content script into every email display page
 await messenger.messageDisplayScripts.register({
-    js: [{ file: "content/inject.js" }]
+    js: [{ file: "content/vendor/purify.min.js" }, { file: "content/inject.js" }]
 });
 
 // ── Button click ──────────────────────────────────────────────────────────────
@@ -16,6 +16,7 @@ messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
 // ── Auto-translate setting (cached to avoid async delay in the listener) ──────
 
 let cachedAutoTranslate = false;
+const AUTO_TRANSLATE_DEBOUNCE_MS = 350;
 
 async function syncAutoTranslate() {
     const { autoTranslate } = await messenger.storage.local.get("autoTranslate");
@@ -31,18 +32,26 @@ messenger.storage.onChanged.addListener((changes) => {
 // ── Email display change ──────────────────────────────────────────────────────
 
 // Always fires when the user switches to a different email.
-// cachedAutoTranslate is read synchronously so run() is called without delay,
-// preventing out-of-order execution when emails are switched quickly.
+// cachedAutoTranslate is read synchronously so the gen bump / debounce below
+// happens without delay, preventing out-of-order execution when emails are
+// switched quickly.
 messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => {
     if (!message) return;
     if (cachedAutoTranslate) {
-        await run(message, tab.id);
+        // Debounce: flicking through several emails quickly would otherwise
+        // fire one translation API call per email. Wait for the user to
+        // settle on one — if a newer switch bumps the gen during the wait,
+        // skip translating this one entirely (no wasted API call).
+        const gen = bumpTabGen(tab.id);
+        await new Promise(r => setTimeout(r, AUTO_TRANSLATE_DEBOUNCE_MS));
+        if (tabGen.get(tab.id) !== gen) return;
+        await run(message, tab.id, gen);
     } else {
         // Bump the generation counter even though no new run() starts here —
         // otherwise a manual translation still in flight for the previous
         // email would pass its stale gen check and reappear over this one.
-        bumpTabGen(tab.id);
-        await sendToTab(tab.id, { action: "closeSplitView" });
+        const gen = bumpTabGen(tab.id);
+        await sendToTab(tab.id, { action: "closeSplitView" }, () => tabGen.get(tab.id) === gen);
     }
 });
 
@@ -53,24 +62,38 @@ messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => 
 const tabGen = new Map();
 
 function bumpTabGen(tabId) {
-    tabGen.set(tabId, (tabGen.get(tabId) ?? 0) + 1);
+    const gen = (tabGen.get(tabId) ?? 0) + 1;
+    tabGen.set(tabId, gen);
+    return gen;
 }
 
-async function sendToTab(tabId, payload) {
+// Retries on failure — the content script may not have finished loading yet
+// (e.g. right after a fast email switch), so the first send can find no
+// listener on the other end. stillValid() stops the retries once the user
+// has moved on to a different email.
+const SEND_RETRY_DELAYS_MS = [100, 250, 500, 1000];
+
+async function sendToTab(tabId, payload, stillValid = () => true, attempt = 0) {
     try {
         await messenger.tabs.sendMessage(tabId, payload);
     } catch (e) {
+        if (attempt < SEND_RETRY_DELAYS_MS.length && stillValid()) {
+            await new Promise(r => setTimeout(r, SEND_RETRY_DELAYS_MS[attempt]));
+            if (stillValid()) return sendToTab(tabId, payload, stillValid, attempt + 1);
+        }
         console.warn("Email Translator: tab message failed.", e.message);
     }
 }
 
-async function run(message, tabId) {
-    bumpTabGen(tabId);
-    const gen = tabGen.get(tabId);
+// gen: pass an already-bumped generation (e.g. from the debounce above) to
+// avoid bumping twice for the same request; omit for immediate calls (button
+// click) where no debounce precedes run().
+async function run(message, tabId, gen = bumpTabGen(tabId)) {
+    const stillValid = () => tabGen.get(tabId) === gen;
 
     const send = async (payload) => {
-        if (tabGen.get(tabId) !== gen) return;
-        await sendToTab(tabId, payload);
+        if (!stillValid()) return;
+        await sendToTab(tabId, payload, stillValid);
     };
 
     await send({ action: "injectSplitView", html: "", text: "", banner: "⏳ Translating…" });
