@@ -2,7 +2,7 @@
 
 // Register the message display content script into every email display page
 await messenger.messageDisplayScripts.register({
-    js: [{ file: "content/inject.js" }]
+    js: [{ file: "content/vendor/purify.min.js" }, { file: "content/inject.js" }]
 });
 
 // ── Button click ──────────────────────────────────────────────────────────────

@@ -23,7 +23,7 @@ function injectSplitView(html, text, banner = "") {
     // Already split — update content and banner only
     if (document.getElementById("et-right")) {
         const bodyEl = document.getElementById("et-body");
-        if (bodyEl) bodyEl.innerHTML = content;
+        if (bodyEl) bodyEl.innerHTML = sanitize(content);
         const bannerEl = document.getElementById("et-banner");
         if (bannerEl) {
             bannerEl.textContent = banner;
@@ -54,7 +54,7 @@ function injectSplitView(html, text, banner = "") {
 
     const bodyEl = document.createElement("div");
     bodyEl.id = "et-body";
-    bodyEl.innerHTML = content; // intentional: renders HTML email content
+    bodyEl.innerHTML = sanitize(content); // renders translated email HTML — sanitized, untrusted source
 
     const right = document.createElement("div");
     right.id = "et-right";
@@ -90,6 +90,12 @@ function closeSplitView() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+// content can be translated HTML sourced from the email body — untrusted, may still
+// carry event-handler attributes or javascript: URLs after translation.
+function sanitize(html) {
+    return globalThis.DOMPurify ? globalThis.DOMPurify.sanitize(html) : "";
+}
 
 function buildParagraphs(text) {
     const lines = (text || "").split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
