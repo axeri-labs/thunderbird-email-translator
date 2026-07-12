@@ -10,7 +10,9 @@ Run from inside the extension directory (where `manifest.json` is):
 
 ```bash
 cd Thunderbird_translate
-zip -r ../email-translator.xpi . --exclude "_work/*" --exclude "*.git*" --exclude "*.xpi"
+zip -r _releases/<version>/email-translator.xpi . \
+  --exclude "_work/*" --exclude "_releases/*" --exclude "*.git*" \
+  --exclude ".claude/*" --exclude "docs/*" --exclude "*.xpi" --exclude "*.code-workspace"
 ```
 
 ### 2. Load into Thunderbird

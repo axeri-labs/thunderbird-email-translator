@@ -30,7 +30,6 @@
   "permissions": [
     "messagesRead",
     "messagesModify",
-    "tabs",
     "storage",
     "*://translate.googleapis.com/*",
     "*://api.mymemory.translated.net/*",
