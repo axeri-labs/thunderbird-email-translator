@@ -41,8 +41,8 @@ messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => 
         // Bump the generation counter even though no new run() starts here —
         // otherwise a manual translation still in flight for the previous
         // email would pass its stale gen check and reappear over this one.
-        bumpTabGen(tab.id);
-        await sendToTab(tab.id, { action: "closeSplitView" });
+        const gen = bumpTabGen(tab.id);
+        await sendToTab(tab.id, { action: "closeSplitView" }, () => tabGen.get(tab.id) === gen);
     }
 });
 
@@ -53,24 +53,37 @@ messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => 
 const tabGen = new Map();
 
 function bumpTabGen(tabId) {
-    tabGen.set(tabId, (tabGen.get(tabId) ?? 0) + 1);
+    const gen = (tabGen.get(tabId) ?? 0) + 1;
+    tabGen.set(tabId, gen);
+    return gen;
 }
 
-async function sendToTab(tabId, payload) {
+// Retries on failure — the content script may not have finished loading yet
+// (e.g. right after a fast email switch), so the first send can find no
+// listener on the other end. stillValid() stops the retries once the user
+// has moved on to a different email.
+const SEND_RETRY_DELAYS_MS = [100, 250, 500, 1000];
+
+async function sendToTab(tabId, payload, stillValid = () => true, attempt = 0) {
     try {
         await messenger.tabs.sendMessage(tabId, payload);
     } catch (e) {
+        if (attempt < SEND_RETRY_DELAYS_MS.length && stillValid()) {
+            await new Promise(r => setTimeout(r, SEND_RETRY_DELAYS_MS[attempt]));
+            if (stillValid()) return sendToTab(tabId, payload, stillValid, attempt + 1);
+        }
         console.warn("Email Translator: tab message failed.", e.message);
     }
 }
 
 async function run(message, tabId) {
-    bumpTabGen(tabId);
-    const gen = tabGen.get(tabId);
+    const gen = bumpTabGen(tabId);
+
+    const stillValid = () => tabGen.get(tabId) === gen;
 
     const send = async (payload) => {
-        if (tabGen.get(tabId) !== gen) return;
-        await sendToTab(tabId, payload);
+        if (!stillValid()) return;
+        await sendToTab(tabId, payload, stillValid);
     };
 
     await send({ action: "injectSplitView", html: "", text: "", banner: "⏳ Translating…" });
