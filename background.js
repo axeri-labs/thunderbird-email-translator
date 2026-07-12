@@ -13,27 +13,37 @@ messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
     await run(message, tab.id);
 });
 
-// ── Auto-translate ────────────────────────────────────────────────────────────
+// ── Auto-translate setting (cached to avoid async delay in the listener) ──────
 
-let autoListener = null;
+let cachedAutoTranslate = false;
 
-async function updateAutoTranslate() {
+async function syncAutoTranslate() {
     const { autoTranslate } = await messenger.storage.local.get("autoTranslate");
-    if (autoTranslate && !autoListener) {
-        autoListener = async (tab, message) => {
-            if (message) await run(message, tab.id);
-        };
-        messenger.messageDisplay.onMessageDisplayed.addListener(autoListener);
-    } else if (!autoTranslate && autoListener) {
-        messenger.messageDisplay.onMessageDisplayed.removeListener(autoListener);
-        autoListener = null;
-    }
+    cachedAutoTranslate = !!autoTranslate;
 }
 
-await updateAutoTranslate();
+await syncAutoTranslate();
 
 messenger.storage.onChanged.addListener((changes) => {
-    if ("autoTranslate" in changes) updateAutoTranslate();
+    if ("autoTranslate" in changes) cachedAutoTranslate = !!changes.autoTranslate.newValue;
+});
+
+// ── Email display change ──────────────────────────────────────────────────────
+
+// Always fires when the user switches to a different email.
+// cachedAutoTranslate is read synchronously so run() is called without delay,
+// preventing out-of-order execution when emails are switched quickly.
+messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => {
+    if (!message) return;
+    if (cachedAutoTranslate) {
+        await run(message, tab.id);
+    } else {
+        // Bump the generation counter even though no new run() starts here —
+        // otherwise a manual translation still in flight for the previous
+        // email would pass its stale gen check and reappear over this one.
+        bumpTabGen(tab.id);
+        await sendToTab(tab.id, { action: "closeSplitView" });
+    }
 });
 
 // ── Main flow ─────────────────────────────────────────────────────────────────
@@ -41,6 +51,10 @@ messenger.storage.onChanged.addListener((changes) => {
 // Per-tab generation counter — incremented on every new translation request.
 // Any in-flight run() for an older generation silently discards its results.
 const tabGen = new Map();
+
+function bumpTabGen(tabId) {
+    tabGen.set(tabId, (tabGen.get(tabId) ?? 0) + 1);
+}
 
 async function sendToTab(tabId, payload) {
     try {
@@ -51,8 +65,8 @@ async function sendToTab(tabId, payload) {
 }
 
 async function run(message, tabId) {
-    const gen = (tabGen.get(tabId) ?? 0) + 1;
-    tabGen.set(tabId, gen);
+    bumpTabGen(tabId);
+    const gen = tabGen.get(tabId);
 
     const send = async (payload) => {
         if (tabGen.get(tabId) !== gen) return;
