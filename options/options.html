@@ -93,11 +93,46 @@
             color: #0055aa;
             min-height: 16px;
         }
+
+        .consent-setting {
+            border: 1px solid #e8c840;
+            background: #fffbe6;
+            border-radius: 6px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+        }
+
+        .consent-setting .setting-desc code {
+            font-size: 11px;
+            background: rgba(0,0,0,.06);
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+
+        fieldset[disabled] {
+            opacity: .5;
+        }
     </style>
 </head>
 <body>
     <h1>Email Translator</h1>
 
+    <div class="setting consent-setting">
+        <input type="checkbox" id="translationConsent">
+        <label for="translationConsent">
+            <div class="setting-title">Allow sending email text for translation</div>
+            <div class="setting-desc">
+                Email Translator does nothing until this is turned on. Translating an email sends
+                <strong>its text content</strong> to the translation service selected below:
+                <code>translate.googleapis.com</code> (Google Translate),
+                <code>api.mymemory.translated.net</code> (MyMemory), or
+                <code>api-free.deepl.com</code> (DeepL) — whichever provider you choose.
+                No headers, sender/recipient, subject, or attachments are ever sent.
+            </div>
+        </label>
+    </div>
+
+    <fieldset id="settings-fieldset" style="border:none; margin:0; padding:0;">
     <div class="setting">
         <div class="setting-info">
             <div class="setting-title">Target language</div>
@@ -190,6 +225,7 @@
             <div class="setting-desc">When enabled, every opened email is translated automatically. When disabled, translation starts only when the button is pressed.</div>
         </label>
     </div>
+    </fieldset>
 
     <div id="status"></div>
 
