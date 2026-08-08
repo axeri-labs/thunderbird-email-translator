@@ -29,6 +29,21 @@ messenger.storage.onChanged.addListener((changes) => {
     if ("autoTranslate" in changes) cachedAutoTranslate = !!changes.autoTranslate.newValue;
 });
 
+// ── One-off cache migration ────────────────────────────────────────────────────
+
+// Old cache entries were keyed by the ephemeral internal message.id (tr2_<numericId>_<lang>),
+// which could silently resolve to the wrong message after a restart or folder compaction —
+// see run() for why headerMessageId is used now. New keys are never purely numeric (a
+// Message-ID header always contains non-digit characters), so this can't touch fresh entries
+// and is safe to run on every startup.
+async function purgeStaleTranslationCache() {
+    const all = await messenger.storage.local.get(null);
+    const staleKeys = Object.keys(all).filter(k => /^tr2_\d+_/.test(k));
+    if (staleKeys.length > 0) await messenger.storage.local.remove(staleKeys);
+}
+
+await purgeStaleTranslationCache();
+
 // ── Email display change ──────────────────────────────────────────────────────
 
 // Always fires when the user switches to a different email.
@@ -100,7 +115,11 @@ async function run(message, tabId, gen = bumpTabGen(tabId)) {
 
     try {
         const { targetLang = "hu" } = await messenger.storage.local.get("targetLang");
-        const cacheKey = `tr2_${message.id}_${targetLang}`;
+        // message.id is only unique for the current session — Thunderbird can
+        // reassign it to a completely different message after a restart or a
+        // folder compaction. headerMessageId (the RFC Message-ID header) stays
+        // stable across those, so it's the only safe key for a persistent cache.
+        const cacheKey = `tr2_${message.headerMessageId ?? message.id}_${targetLang}`;
         const cached = await messenger.storage.local.get(cacheKey);
 
         if (cached[cacheKey]) {
