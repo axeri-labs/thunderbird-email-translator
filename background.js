@@ -29,6 +29,21 @@ messenger.storage.onChanged.addListener((changes) => {
     if ("autoTranslate" in changes) cachedAutoTranslate = !!changes.autoTranslate.newValue;
 });
 
+// ── One-off cache migration ────────────────────────────────────────────────────
+
+// Old cache entries were keyed by the ephemeral internal message.id (tr2_<numericId>_<lang>),
+// which could silently resolve to the wrong message after a restart or folder compaction —
+// see run() for why headerMessageId is used now. New keys are never purely numeric (a
+// Message-ID header always contains non-digit characters), so this can't touch fresh entries
+// and is safe to run on every startup.
+async function purgeStaleTranslationCache() {
+    const all = await messenger.storage.local.get(null);
+    const staleKeys = Object.keys(all).filter(k => /^tr2_\d+_/.test(k));
+    if (staleKeys.length > 0) await messenger.storage.local.remove(staleKeys);
+}
+
+await purgeStaleTranslationCache();
+
 // ── Email display change ──────────────────────────────────────────────────────
 
 // Always fires when the user switches to a different email.
@@ -45,7 +60,7 @@ messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => 
         const gen = bumpTabGen(tab.id);
         await new Promise(r => setTimeout(r, AUTO_TRANSLATE_DEBOUNCE_MS));
         if (tabGen.get(tab.id) !== gen) return;
-        await run(message, tab.id, gen);
+        await run(message, tab.id, gen, false);
     } else {
         // Bump the generation counter even though no new run() starts here —
         // otherwise a manual translation still in flight for the previous
@@ -88,7 +103,9 @@ async function sendToTab(tabId, payload, stillValid = () => true, attempt = 0) {
 // gen: pass an already-bumped generation (e.g. from the debounce above) to
 // avoid bumping twice for the same request; omit for immediate calls (button
 // click) where no debounce precedes run().
-async function run(message, tabId, gen = bumpTabGen(tabId)) {
+// manual: true for a direct button click, false for auto-translate. Controls
+// what happens when consent hasn't been granted (see below).
+async function run(message, tabId, gen = bumpTabGen(tabId), manual = true) {
     const stillValid = () => tabGen.get(tabId) === gen;
 
     const send = async (payload) => {
@@ -96,11 +113,36 @@ async function run(message, tabId, gen = bumpTabGen(tabId)) {
         await sendToTab(tabId, payload, stillValid);
     };
 
+    // Nothing may be sent to a translation service until the user has explicitly
+    // opted in on the Settings page — see options.html. Auto-translate stays
+    // silent when consent is missing (it fires on every opened email, so a
+    // message here would nag constantly); a manual click gets one explanation.
+    const { translationConsent = false } = await messenger.storage.local.get("translationConsent");
+    if (!translationConsent) {
+        if (!manual) return;
+        await send({
+            action: "injectSplitView",
+            html: `<p style='color:#444;font-weight:600'>Email translation is turned off.</p>
+                   <p style='font-size:13px;color:#666;margin-top:8px;line-height:1.6'>
+                     Translating sends the email text to an external service (Google Translate,
+                     MyMemory, or DeepL). Open <strong>Settings</strong> and enable
+                     “Allow sending email text for translation” to use this feature.
+                   </p>`,
+            text: "",
+            banner: ""
+        });
+        return;
+    }
+
     await send({ action: "injectSplitView", html: "", text: "", banner: "⏳ Translating…" });
 
     try {
         const { targetLang = "hu" } = await messenger.storage.local.get("targetLang");
-        const cacheKey = `tr2_${message.id}_${targetLang}`;
+        // message.id is only unique for the current session — Thunderbird can
+        // reassign it to a completely different message after a restart or a
+        // folder compaction. headerMessageId (the RFC Message-ID header) stays
+        // stable across those, so it's the only safe key for a persistent cache.
+        const cacheKey = `tr2_${message.headerMessageId ?? message.id}_${targetLang}`;
         const cached = await messenger.storage.local.get(cacheKey);
 
         if (cached[cacheKey]) {

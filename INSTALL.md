@@ -52,12 +52,16 @@ Switch providers in **Settings** (gear icon in Add-ons manager).
 ```
 Thunderbird_translate/
 ├── manifest.json               # Extension manifest (MV2)
+├── package.json                # Declares vendored 3rd-party dependencies (DOMPurify)
+├── VENDOR.md                   # Vendoring details for reviewers (source URL, version, license)
 ├── background.html             # Background page loader
 ├── background.js               # Main logic: translation, caching, race condition handling
 ├── content/
-│   └── inject.js               # Split view injected into the email display page
+│   ├── inject.js                # Split view injected into the email display page
+│   └── vendor/
+│       └── purify.min.js        # DOMPurify — see VENDOR.md
 ├── options/
-│   ├── options.html            # Settings page UI
+│   ├── options.html            # Settings page UI (incl. data-sharing consent)
 │   └── options.js              # Settings page logic
 ├── icons/
 │   ├── translate.svg           # Toolbar button icon
