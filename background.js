@@ -134,7 +134,13 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true) {
         return;
     }
 
-    await send({ action: "injectSplitView", html: "", text: "", banner: "⏳ Translating…" });
+    // Resolved up front so both the banner and the error panel can name the
+    // service that actually runs — neither may point at a provider the user
+    // didn't pick.
+    const providerCfg = await resolveProvider();
+    const busyBanner = `⏳ Translating… (${PROVIDER_LABEL[providerCfg.provider]})`;
+
+    await send({ action: "injectSplitView", html: "", text: "", banner: busyBanner });
 
     try {
         const { targetLang = "hu" } = await messenger.storage.local.get("targetLang");
@@ -163,11 +169,11 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true) {
                 action: "injectSplitView",
                 html: htmlBodyContent(rawHtml),
                 text: "",
-                banner: "⏳ Translating…"
+                banner: busyBanner
             });
         }
 
-        const translation = await fetchTranslation(fullMessage, targetLang);
+        const translation = await fetchTranslation(fullMessage, targetLang, providerCfg);
         if (tabGen.get(tabId) !== gen) return;
 
         if (!translation) {
@@ -188,31 +194,98 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true) {
         });
     } catch (err) {
         console.error("Email Translator:", err.message);
-        const is429 = err.message.includes("429");
-        const html = is429
-            ? `<p style='color:#c00;font-weight:600'>MyMemory rate limit reached.</p>
-               <p style='font-size:13px;color:#444;margin-top:8px;line-height:1.6'>
-                 MyMemory limits requests per IP address — changing email does not help.<br><br>
-                 <strong>Option 1:</strong> Wait a few minutes and try again.<br>
-                 <strong>Option 2:</strong> Switch to <strong>Google Translate</strong> in Settings — free, no limits.<br>
-                 <strong>Option 3:</strong> Switch to <strong>DeepL</strong> in Settings (free API key, 500,000 characters/month).
-               </p>`
-            : `<p style='color:#c00'>Translation failed: ${escapeHtml(err.message)}</p>`;
-        await send({ action: "injectSplitView", html, text: "", banner: "" });
+        await send({
+            action: "injectSplitView",
+            html: errorPanelHtml(providerCfg.provider, err),
+            text: "",
+            banner: ""
+        });
     }
+}
+
+// ── Error reporting ───────────────────────────────────────────────────────────
+
+const PROVIDER_LABEL = {
+    google: "Google Translate",
+    mymemory: "MyMemory",
+    deepl: "DeepL"
+};
+
+// Errors that can explain themselves: which provider produced them, and what
+// kind of failure it was ("quota" | "auth" | "config" | "http").
+class TranslationError extends Error {
+    constructor(provider, kind, detail = "") {
+        super(`${PROVIDER_LABEL[provider] ?? provider}: ${detail || kind}`);
+        this.provider = provider;
+        this.kind = kind;
+        this.detail = detail;
+    }
+}
+
+function errorKind(err) {
+    return err instanceof TranslationError ? err.kind : "local";
+}
+
+const P_ERR = "<p style='color:#c00;font-weight:600'>";
+const P_BODY = "<p style='font-size:13px;color:#444;margin-top:8px;line-height:1.6'>";
+
+// Every panel names the provider the user actually selected, and never asks for
+// an account the selected provider doesn't need.
+function errorPanelHtml(provider, err) {
+    const label = PROVIDER_LABEL[provider] ?? provider;
+    const kind = errorKind(err);
+
+    if (kind === "config" && provider === "deepl") {
+        return `${P_ERR}DeepL is selected, but no API key is saved.</p>
+                ${P_BODY}Enter your DeepL API key in <strong>Settings</strong>, or switch the engine to
+                <strong>Google Translate</strong> — it needs no key and no account.</p>`;
+    }
+    if (kind === "auth" && provider === "deepl") {
+        return `${P_ERR}DeepL rejected the API key.</p>
+                ${P_BODY}Check the key in <strong>Settings</strong> (free keys end in <code>:fx</code>), or switch the
+                engine to <strong>Google Translate</strong> — it needs no key and no account.</p>`;
+    }
+    if (kind === "quota" && provider === "mymemory") {
+        return `${P_ERR}MyMemory's free quota for this connection is used up.</p>
+                ${P_BODY}This is a limit of the MyMemory service, applied per IP address.<br><br>
+                <strong>Option 1:</strong> Switch the engine to <strong>Google Translate</strong> in Settings —
+                free, no key, no account.<br>
+                <strong>Option 2:</strong> Wait a few minutes and try again.<br>
+                <strong>Option 3:</strong> Enter an e-mail address in the MyMemory section of Settings — optional,
+                it raises MyMemory's own daily quota.</p>`;
+    }
+    if (kind === "quota") {
+        return `${P_ERR}${escapeHtml(label)} is rate-limiting this connection.</p>
+                ${P_BODY}${escapeHtml(label)} temporarily refused further requests from this IP address.
+                No account or login is involved — waiting a few minutes and trying again usually clears it.<br><br>
+                You can also switch the engine in <strong>Settings</strong>.</p>`;
+    }
+    // "local" means the failure never reached a translation service (reading the
+    // message, injecting the panel): naming a provider there would blame the
+    // wrong thing.
+    const blame = kind === "local" ? "" : ` (${escapeHtml(label)})`;
+    return `${P_ERR}Translation failed${blame}.</p>
+            ${P_BODY}${escapeHtml(err.message)}</p>`;
 }
 
 // ── Translation providers ─────────────────────────────────────────────────────
 
-// fullMessage is already fetched in run() and passed here to avoid double fetch
-async function fetchTranslation(fullMessage, targetLang) {
+async function resolveProvider() {
     const { translationProvider = "google", deeplApiKey = "" } =
         await messenger.storage.local.get(["translationProvider", "deeplApiKey"]);
+    const provider = PROVIDER_LABEL[translationProvider] ? translationProvider : "google";
+    return { provider, deeplApiKey };
+}
 
-    if (translationProvider === "deepl" && deeplApiKey) {
+// fullMessage is already fetched in run() and passed here to avoid double fetch
+async function fetchTranslation(fullMessage, targetLang, { provider, deeplApiKey }) {
+    if (provider === "deepl") {
+        // A missing key used to fall through to Google: the email then went to a
+        // service the user hadn't chosen. Fail visibly instead.
+        if (!deeplApiKey) throw new TranslationError("deepl", "config");
         return fetchTranslationDeepl(fullMessage, targetLang, deeplApiKey);
     }
-    if (translationProvider === "mymemory") {
+    if (provider === "mymemory") {
         return fetchTranslationMyMemory(fullMessage, targetLang);
     }
     return fetchTranslationGoogle(fullMessage, targetLang);
@@ -260,12 +333,24 @@ async function translateHtmlPreservingStructureGoogle(originalHtml, targetLang) 
 
 const GOOGLE_LANG = { "zh-CN": "zh-CN", "zh-TW": "zh-TW", "pt": "pt", "en": "en" };
 
+// The public endpoint rate-limits per IP and recovers quickly, so a couple of
+// spaced retries turn most 429s into a successful translation.
+const GT_RETRY_DELAYS_MS = [1500, 4000];
+
 async function googleTranslate(text, targetLang) {
     const tl = GOOGLE_LANG[targetLang] ?? targetLang.split("-")[0];
     const url = "https://translate.googleapis.com/translate_a/single" +
         `?client=gtx&sl=auto&tl=${encodeURIComponent(tl)}&dt=t&q=${encodeURIComponent(text)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Google Translate HTTP ${res.status}`);
+
+    let res;
+    for (let attempt = 0; ; attempt++) {
+        res = await fetch(url);
+        if (res.status !== 429 || attempt >= GT_RETRY_DELAYS_MS.length) break;
+        await new Promise(r => setTimeout(r, GT_RETRY_DELAYS_MS[attempt]));
+    }
+    if (!res.ok) {
+        throw new TranslationError("google", res.status === 429 ? "quota" : "http", `HTTP ${res.status}`);
+    }
     const data = await res.json();
     return data[0].map(item => item[0] ?? "").join("");
 }
@@ -361,14 +446,31 @@ async function translateAndApplyBatch(batch, sourceLang, targetLang, email = "")
         res = await fetch("https://api.mymemory.translated.net/get?" + params);
         if (res.status !== 429) break;
     }
-    if (!res.ok) throw new Error(`MyMemory HTTP ${res.status}`);
+    throwIfMyMemoryFailed(res);
     const data = await res.json();
-    if (data.responseStatus !== 200) throw new Error(`MyMemory: ${data.responseDetails ?? "unknown error"}`);
+    throwIfMyMemoryRejected(data);
 
     const parts = data.responseData.translatedText.split(MM_SEP_RE);
     for (let i = 0; i < batch.nodes.length; i++) {
         batch.nodes[i].nodeValue = parts[i] ?? (i === 0 ? data.responseData.translatedText : "");
     }
+}
+
+function throwIfMyMemoryFailed(res) {
+    if (res.ok) return;
+    throw new TranslationError("mymemory", res.status === 429 ? "quota" : "http", `HTTP ${res.status}`);
+}
+
+// MyMemory answers HTTP 200 with a warning in responseDetails when the free
+// daily quota is spent; that text is what tells the user to log in. Classify it
+// so the panel can explain it as a MyMemory limit instead of passing it through
+// raw — and it can only ever reach a user who selected MyMemory.
+const MM_QUOTA_RE = /MYMEMORY WARNING|QUOTA|ALL AVAILABLE FREE TRANSLATIONS|LOGIN/i;
+
+function throwIfMyMemoryRejected(data) {
+    if (data.responseStatus === 200) return;
+    const detail = String(data.responseDetails ?? "unknown error");
+    throw new TranslationError("mymemory", MM_QUOTA_RE.test(detail) ? "quota" : "http", detail);
 }
 
 // DeepL — higher quality, preserves HTML structure; requires free API key
@@ -389,6 +491,9 @@ async function fetchTranslationDeepl(fullMessage, targetLang, apiKey) {
                     : "";
                 return { html: translatedHtml + suffix };
             } catch (err) {
+                // A rejected key or a spent quota fails the same way on the second
+                // call — report it instead of spending another request on it.
+                if (err instanceof TranslationError && (err.kind === "auth" || err.kind === "quota")) throw err;
                 console.warn("DeepL HTML translation failed, falling back to plain text:", err.message);
             }
         }
@@ -435,11 +540,9 @@ async function myMemoryTranslate(text, sourceLang, targetLang, email = "") {
         if (email) paramObj.de = email;
         const params = new URLSearchParams(paramObj);
         const res = await fetch("https://api.mymemory.translated.net/get?" + params);
-        if (!res.ok) throw new Error(`MyMemory HTTP ${res.status}`);
+        throwIfMyMemoryFailed(res);
         const data = await res.json();
-        if (data.responseStatus !== 200) {
-            throw new Error(`MyMemory: ${data.responseDetails ?? "unknown error"}`);
-        }
+        throwIfMyMemoryRejected(data);
         results.push(data.responseData.translatedText);
     }
     return results.join(" ");
@@ -463,7 +566,10 @@ async function deeplTranslate(text, targetLang, format, apiKey) {
     });
     if (!res.ok) {
         const msg = await res.text().catch(() => "");
-        throw new Error(`DeepL HTTP ${res.status}: ${msg}`);
+        const kind = res.status === 403 || res.status === 401 ? "auth"
+            : res.status === 429 || res.status === 456 ? "quota"
+            : "http";
+        throw new TranslationError("deepl", kind, `HTTP ${res.status}${msg ? `: ${msg}` : ""}`);
     }
     const data = await res.json();
     return data.translations?.[0]?.text ?? "";
