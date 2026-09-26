@@ -13,6 +13,25 @@ messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
     await run(message, tab.id);
 });
 
+// ── "Translate again" button in the split view ────────────────────────────────
+
+// Not an async listener: returning a promise from onMessage means "a reply is
+// coming", and the button doesn't wait for one.
+messenger.runtime.onMessage.addListener((request, sender) => {
+    if (request?.action !== "retranslate") return;
+    const tabId = sender.tab?.id;
+    if (tabId !== undefined) void retranslate(tabId);
+});
+
+async function retranslate(tabId) {
+    const message = await messenger.messageDisplay.getDisplayedMessage(tabId);
+    if (!message) return;
+    // force: the user asks for a fresh translation precisely because the cached
+    // one is not what they want (wrong engine, wrong source language,
+    // truncated) — serving the cache again would do nothing visible.
+    await run(message, tabId, bumpTabGen(tabId), true, true);
+}
+
 // ── Auto-translate setting (cached to avoid async delay in the listener) ──────
 
 let cachedAutoTranslate = false;
@@ -105,7 +124,8 @@ async function sendToTab(tabId, payload, stillValid = () => true, attempt = 0) {
 // click) where no debounce precedes run().
 // manual: true for a direct button click, false for auto-translate. Controls
 // what happens when consent hasn't been granted (see below).
-async function run(message, tabId, gen = bumpTabGen(tabId), manual = true) {
+// force: skip the cached translation and fetch a new one, overwriting the entry.
+async function run(message, tabId, gen = bumpTabGen(tabId), manual = true, force = false) {
     const stillValid = () => tabGen.get(tabId) === gen;
 
     const send = async (payload) => {
@@ -149,7 +169,7 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true) {
         // folder compaction. headerMessageId (the RFC Message-ID header) stays
         // stable across those, so it's the only safe key for a persistent cache.
         const cacheKey = `tr2_${message.headerMessageId ?? message.id}_${targetLang}`;
-        const cached = await messenger.storage.local.get(cacheKey);
+        const cached = force ? {} : await messenger.storage.local.get(cacheKey);
 
         if (cached[cacheKey]) {
             await send({

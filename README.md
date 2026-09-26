@@ -13,7 +13,8 @@ inside Thunderbird. No account, no sign-up: the default engine needs neither a k
 - **Manual or automatic** — translate with the toolbar button, or let every opened email be
   translated automatically.
 - **Local cache** — a translated email is stored in your Thunderbird profile and re-opens
-  instantly without another request.
+  instantly without another request. The ↻ button in the panel translates it again from
+  scratch, for when you have changed a setting or the result was not what you expected.
 - **Nothing leaves your machine until you say so** — translation is disabled until you tick
   *Allow sending email text for translation* in Settings.
 
