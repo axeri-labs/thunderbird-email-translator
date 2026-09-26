@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Email Translator",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Translates the open email to the selected language — shows translation in a split view inside Thunderbird.",
   "author": "info@axerilabs.com",
   "browser_specific_settings": {

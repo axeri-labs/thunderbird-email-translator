@@ -1,6 +1,6 @@
 {
   "name": "email-translator",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "dependencies": {
     "dompurify": "3.4.12"
   }
