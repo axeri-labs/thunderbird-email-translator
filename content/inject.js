@@ -23,12 +23,15 @@ function injectSplitView(html, text, banner = "") {
     // Already split — update content and banner only
     if (document.getElementById("et-right")) {
         const bodyEl = document.getElementById("et-body");
-        if (bodyEl) bodyEl.innerHTML = sanitize(content);
+        // An empty payload is a banner-only update (the "translating…" step of a
+        // re-translation) — leave what is on screen instead of blanking it.
+        if (bodyEl && (html || text)) bodyEl.innerHTML = sanitize(content);
         const bannerEl = document.getElementById("et-banner");
         if (bannerEl) {
             bannerEl.textContent = banner;
             bannerEl.style.display = banner ? "flex" : "none";
         }
+        setBusy(document.getElementById("et-retry"), banner);
         return;
     }
 
@@ -41,6 +44,11 @@ function injectSplitView(html, text, banner = "") {
 
     const divider = document.createElement("div");
     divider.id = "et-divider";
+
+    const retryBtn = document.createElement("button");
+    retryBtn.id = "et-retry";
+    retryBtn.title = "Translate again";
+    retryBtn.appendChild(circularArrowIcon());
 
     const closeBtn = document.createElement("button");
     closeBtn.id = "et-close";
@@ -58,6 +66,7 @@ function injectSplitView(html, text, banner = "") {
 
     const right = document.createElement("div");
     right.id = "et-right";
+    right.appendChild(retryBtn);
     right.appendChild(closeBtn);
     right.appendChild(bannerEl);
     right.appendChild(bodyEl);
@@ -71,7 +80,48 @@ function injectSplitView(html, text, banner = "") {
         "height:100vh !important; overflow:hidden !important; box-sizing:border-box !important;";
 
     closeBtn.addEventListener("click", closeSplitView);
+    retryBtn.addEventListener("click", requestRetranslate);
+    setBusy(retryBtn, banner);
     setupResizer(divider, left, right);
+}
+
+// Drawn rather than typed: a "↻" character depends on a font that has it, and
+// the email being displayed controls the fonts in this document.
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function circularArrowIcon() {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("width", "17");
+    svg.setAttribute("height", "17");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2.2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+
+    // Open circle with an arrowhead at its end — legible at 17px, unlike a
+    // filled glyph of the same size.
+    for (const d of ["M20.49 15a9 9 0 1 1-2.12-9.36L23 10", "M23 4v6h-6"]) {
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", d);
+        svg.appendChild(path);
+    }
+    return svg;
+}
+
+// Ask the background to translate this email again, ignoring the cached result —
+// for when a translation came back wrong, truncated, or from the wrong engine,
+// or after changing a setting.
+function requestRetranslate() {
+    browser.runtime.sendMessage({ action: "retranslate" });
+}
+
+// A banner is only shown while a translation is running, so it doubles as the
+// "busy" signal for the button.
+function setBusy(btn, banner) {
+    if (btn) btn.disabled = !!banner;
 }
 
 function closeSplitView() {
@@ -122,12 +172,16 @@ function injectStyles(origBg) {
         #et-banner  { position:absolute; top:0; left:0; right:0; z-index:9;
                       background:#fffbe6; border-bottom:1px solid #e8c840;
                       padding:14px 18px; font-size:14px; color:#7a5c00; }
-        #et-close   { position:absolute; top:10px; right:10px; z-index:10;
+        #et-close, #et-retry
+                    { position:absolute; top:10px; z-index:10;
                       width:28px; height:28px; border-radius:50%;
                       background:rgba(0,0,0,.15); border:none; cursor:pointer;
                       font-size:14px; color:#333; line-height:1;
                       display:flex; align-items:center; justify-content:center; }
-        #et-close:hover { background:rgba(0,0,0,.3); color:#000; }
+        #et-close   { right:10px; }
+        #et-retry   { right:44px; }
+        #et-close:hover, #et-retry:hover:not(:disabled) { background:rgba(0,0,0,.3); color:#000; }
+        #et-retry:disabled { opacity:.4; cursor:default; }
         #et-body    { flex:1; overflow:auto; }
         #et-body > p { margin:0 0 9px; padding:14px 16px 0; }
         #et-body > p:last-child { margin:0; padding-bottom:14px; }
