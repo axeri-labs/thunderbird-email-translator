@@ -265,6 +265,13 @@ function errorPanelHtml(provider, err) {
                 ${P_BODY}Check the key in <strong>Settings</strong> (free keys end in <code>:fx</code>), or switch the
                 engine to <strong>Google Translate</strong> — it needs no key and no account.</p>`;
     }
+    if (kind === "samelang" && provider === "mymemory") {
+        return `${P_ERR}MyMemory needs two different languages.</p>
+                ${P_BODY}In <strong>Settings</strong>, <em>Email language</em> is the language your emails are
+                written in, and it cannot be the same as the target language. Set it to the language you
+                receive, or switch the engine to <strong>Google Translate</strong> or <strong>DeepL</strong> —
+                both detect the source language on their own.</p>`;
+    }
     if (kind === "quota" && provider === "mymemory") {
         return `${P_ERR}MyMemory's free quota for this connection is used up.</p>
                 ${P_BODY}This is a limit of the MyMemory service, applied per IP address.<br><br>
@@ -381,6 +388,11 @@ async function fetchTranslationMyMemory(fullMessage, targetLang) {
     const { sourceLang = "en", myMemoryEmail = "" } =
         await messenger.storage.local.get(["sourceLang", "myMemoryEmail"]);
 
+    // MyMemory rejects a langpair of two identical languages, and its own wording
+    // for that ("PLEASE SELECT TWO DISTINCT LANGUAGES") doesn't say which of the
+    // two settings to change. Catch it here, before the request.
+    if (sourceLang === targetLang) throw new TranslationError("mymemory", "samelang");
+
     const rawHtml = extractHtml(fullMessage);
     if (rawHtml) {
         const bodyHtml = htmlBodyContent(rawHtml);
@@ -486,11 +498,15 @@ function throwIfMyMemoryFailed(res) {
 // so the panel can explain it as a MyMemory limit instead of passing it through
 // raw — and it can only ever reach a user who selected MyMemory.
 const MM_QUOTA_RE = /MYMEMORY WARNING|QUOTA|ALL AVAILABLE FREE TRANSLATIONS|LOGIN/i;
+const MM_SAMELANG_RE = /TWO DISTINCT LANGUAGES|INVALID LANGUAGE PAIR/i;
 
 function throwIfMyMemoryRejected(data) {
     if (data.responseStatus === 200) return;
     const detail = String(data.responseDetails ?? "unknown error");
-    throw new TranslationError("mymemory", MM_QUOTA_RE.test(detail) ? "quota" : "http", detail);
+    const kind = MM_SAMELANG_RE.test(detail) ? "samelang"
+        : MM_QUOTA_RE.test(detail) ? "quota"
+        : "http";
+    throw new TranslationError("mymemory", kind, detail);
 }
 
 // DeepL — higher quality, preserves HTML structure; requires free API key
