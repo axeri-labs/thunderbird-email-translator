@@ -1,0 +1,129 @@
+{
+  "extensionDescription": {
+    "message": "開いているメールをあなたの言語に翻訳し、原文と並べて Thunderbird 内に表示します。"
+  },
+  "actionTitle": {
+    "message": "メールを翻訳"
+  },
+  "optionsTitle": {
+    "message": "Email Translator – 設定"
+  },
+  "consentTitle": {
+    "message": "翻訳のためにメール本文の送信を許可する"
+  },
+  "consentDesc": {
+    "message": "これをオンにするまで Email Translator は何も行いません。翻訳時には、開いているメールの本文のみが下で選んだエンジンに送信されます。差出人・宛先・件名・ヘッダー・添付ファイルが送信されることはありません。"
+  },
+  "targetLangTitle": {
+    "message": "翻訳先の言語"
+  },
+  "targetLangDesc": {
+    "message": "メールを翻訳する言語です。"
+  },
+  "providerTitle": {
+    "message": "翻訳エンジン"
+  },
+  "engineGoogleDesc": {
+    "message": "— 無料。アカウントもキーも不要で、原文の言語を自動判別します。"
+  },
+  "engineMyMemoryDesc": {
+    "message": "— 無料、アカウント不要。IP アドレスごとに制限があります（毎分約 10 リクエスト、1 日 1,000 語）。"
+  },
+  "engineDeeplDesc": {
+    "message": "— 最高品質。月 50 万文字まで無料。無料の API キーが必要です:"
+  },
+  "sourceLangLabel": {
+    "message": "メールの言語:"
+  },
+  "sourceLangHint": {
+    "message": "MyMemory は原文の言語を判別できないため、メールが書かれている言語を指定してください。翻訳先の言語と同じ場合、MyMemory はリクエストを拒否します。Google Translate と DeepL は自動で判別します。"
+  },
+  "mmEmailLabel": {
+    "message": "メールアドレス（任意）:"
+  },
+  "mmEmailHint": {
+    "message": "ログインでも登録でもありません。MyMemory は利用枠の識別にのみこのアドレスを使います。空欄のままでも構いません。入力すると 1 日の上限が IP アドレスあたり 1,000 語から 10,000 語に増えます。"
+  },
+  "deeplKeyPlaceholder": {
+    "message": "DeepL API キー"
+  },
+  "deeplKeyHint": {
+    "message": "無料のキーは deepl.com/pro-api で取得できます（クレジットカード不要）。"
+  },
+  "autoTranslateTitle": {
+    "message": "自動翻訳"
+  },
+  "autoTranslateDesc": {
+    "message": "メールを開くたびに自動で翻訳します。オフの場合は、ツールバーのボタンを押したときだけ翻訳します。"
+  },
+  "saved": {
+    "message": "保存しました。"
+  },
+  "panelClose": {
+    "message": "翻訳を閉じる"
+  },
+  "panelRetry": {
+    "message": "もう一度翻訳"
+  },
+  "panelEmpty": {
+    "message": "(空)"
+  },
+  "bannerTranslating": {
+    "message": "⏳ 翻訳中…（$1）",
+    "description": "$1 is the name of the translation engine, e.g. Google Translate"
+  },
+  "consentOffTitle": {
+    "message": "メールの翻訳はオフになっています。"
+  },
+  "consentOffBody": {
+    "message": "翻訳するとこのメールの本文が外部サービスに送信されます。設定を開き、「翻訳のためにメール本文の送信を許可する」をオンにしてください。"
+  },
+  "noContent": {
+    "message": "このメールには翻訳できる本文が見つかりませんでした。"
+  },
+  "errDeeplNoKeyTitle": {
+    "message": "DeepL が選択されていますが、API キーが保存されていません。"
+  },
+  "errDeeplNoKeyBody": {
+    "message": "設定で DeepL の API キーを入力するか、エンジンを Google Translate に切り替えてください（キーもアカウントも不要です）。"
+  },
+  "errDeeplAuthTitle": {
+    "message": "DeepL が API キーを拒否しました。"
+  },
+  "errDeeplAuthBody": {
+    "message": "設定でキーを確認するか（無料キーは :fx で終わります）、エンジンを Google Translate に切り替えてください（キーもアカウントも不要です）。"
+  },
+  "errSameLangTitle": {
+    "message": "MyMemory には異なる 2 つの言語が必要です。"
+  },
+  "errSameLangBody": {
+    "message": "設定の「メールの言語」は、受け取るメールが書かれている言語です。翻訳先の言語と同じにはできません。受信するメールの言語を指定するか、エンジンを Google Translate か DeepL に切り替えてください。どちらも原文の言語を自動で判別します。"
+  },
+  "errMyMemoryQuotaTitle": {
+    "message": "この回線での MyMemory の無料利用枠を使い切りました。"
+  },
+  "errMyMemoryQuotaBody": {
+    "message": "これは MyMemory 側の制限で、IP アドレスごとに適用されます。設定でエンジンを Google Translate に切り替えるか（無料、キーもアカウントも不要）、数分待ってからやり直してください。設定の MyMemory 欄にメールアドレスを入力すると、MyMemory の 1 日の上限が増えます。"
+  },
+  "errQuotaTitle": {
+    "message": "$1 がこの回線からのリクエストを制限しています。",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errQuotaBody": {
+    "message": "$1 がこの IP アドレスからのリクエストを一時的に拒否しました。アカウントやログインとは関係ありません。数分待ってからやり直すとたいてい解消します。設定でエンジンを切り替えることもできます。",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitle": {
+    "message": "翻訳に失敗しました（$1）。",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitleLocal": {
+    "message": "翻訳に失敗しました。"
+  },
+  "truncatedSwitchToDeepl": {
+    "message": "⚠ 翻訳が途中で切れました。長いメールの場合は設定で DeepL に切り替えてください。"
+  },
+  "truncatedDeepl": {
+    "message": "⚠ 翻訳が途中で切れました — メールが 30,000 文字を超えています。"
+  }
+}

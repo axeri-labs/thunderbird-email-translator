@@ -2,7 +2,8 @@
   "manifest_version": 2,
   "name": "Email Translator",
   "version": "1.0.5",
-  "description": "Translates the open email to the selected language — shows translation in a split view inside Thunderbird.",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "author": "info@axerilabs.com",
   "browser_specific_settings": {
     "gecko": {
@@ -19,7 +20,7 @@
     "open_in_tab": false
   },
   "message_display_action": {
-    "default_title": "Translate email",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "48": "icons/translate.svg"
     }

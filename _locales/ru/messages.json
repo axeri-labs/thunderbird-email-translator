@@ -1,0 +1,129 @@
+{
+  "extensionDescription": {
+    "message": "Переводит открытое письмо на ваш язык и показывает перевод рядом с оригиналом, прямо в Thunderbird."
+  },
+  "actionTitle": {
+    "message": "Перевести письмо"
+  },
+  "optionsTitle": {
+    "message": "Email Translator – настройки"
+  },
+  "consentTitle": {
+    "message": "Разрешить отправку текста писем для перевода"
+  },
+  "consentDesc": {
+    "message": "Email Translator ничего не делает, пока это не включено. При переводе текст открытого письма отправляется выбранному ниже сервису — но никогда отправитель, получатели, тема, заголовки или вложения."
+  },
+  "targetLangTitle": {
+    "message": "Язык перевода"
+  },
+  "targetLangDesc": {
+    "message": "На какой язык переводить письма."
+  },
+  "providerTitle": {
+    "message": "Сервис перевода"
+  },
+  "engineGoogleDesc": {
+    "message": "— бесплатно, без аккаунта и ключа, язык оригинала определяется автоматически."
+  },
+  "engineMyMemoryDesc": {
+    "message": "— бесплатно, без аккаунта. Ограничения по IP-адресу: около 10 запросов в минуту и 1000 слов в день."
+  },
+  "engineDeeplDesc": {
+    "message": "— лучшее качество, 500 000 символов в месяц бесплатно. Нужен бесплатный API-ключ:"
+  },
+  "sourceLangLabel": {
+    "message": "Язык писем:"
+  },
+  "sourceLangHint": {
+    "message": "MyMemory не определяет язык оригинала, поэтому укажите язык, на котором написаны ваши письма. Он должен отличаться от языка перевода, иначе MyMemory отклонит запрос. Google Translate и DeepL определяют его сами."
+  },
+  "mmEmailLabel": {
+    "message": "Эл. почта (необязательно):"
+  },
+  "mmEmailHint": {
+    "message": "Это не вход в аккаунт и не регистрация: MyMemory использует адрес только для учёта квоты, поле можно оставить пустым. Если его заполнить, дневной лимит вырастет с 1000 до 10 000 слов на IP-адрес."
+  },
+  "deeplKeyPlaceholder": {
+    "message": "API-ключ DeepL"
+  },
+  "deeplKeyHint": {
+    "message": "Бесплатный ключ: deepl.com/pro-api — банковская карта не нужна."
+  },
+  "autoTranslateTitle": {
+    "message": "Автоперевод"
+  },
+  "autoTranslateDesc": {
+    "message": "Переводить каждое письмо сразу при открытии. Если выключено, перевод начинается только по нажатию кнопки на панели инструментов."
+  },
+  "saved": {
+    "message": "Сохранено."
+  },
+  "panelClose": {
+    "message": "Закрыть перевод"
+  },
+  "panelRetry": {
+    "message": "Перевести заново"
+  },
+  "panelEmpty": {
+    "message": "(пусто)"
+  },
+  "bannerTranslating": {
+    "message": "⏳ Перевод… ($1)",
+    "description": "$1 is the name of the translation engine, e.g. Google Translate"
+  },
+  "consentOffTitle": {
+    "message": "Перевод писем выключен."
+  },
+  "consentOffBody": {
+    "message": "При переводе текст этого письма отправляется внешнему сервису. Откройте настройки и включите «Разрешить отправку текста писем для перевода»."
+  },
+  "noContent": {
+    "message": "В этом письме не найдено текста для перевода."
+  },
+  "errDeeplNoKeyTitle": {
+    "message": "Выбран DeepL, но API-ключ не сохранён."
+  },
+  "errDeeplNoKeyBody": {
+    "message": "Введите ключ DeepL в настройках или переключитесь на Google Translate — для него не нужны ни ключ, ни аккаунт."
+  },
+  "errDeeplAuthTitle": {
+    "message": "DeepL отклонил API-ключ."
+  },
+  "errDeeplAuthBody": {
+    "message": "Проверьте ключ в настройках (бесплатные ключи заканчиваются на :fx) или переключитесь на Google Translate — для него не нужны ни ключ, ни аккаунт."
+  },
+  "errSameLangTitle": {
+    "message": "MyMemory требует два разных языка."
+  },
+  "errSameLangBody": {
+    "message": "В настройках «Язык писем» — это язык, на котором написаны ваши письма, и он не может совпадать с языком перевода. Укажите язык получаемых писем или переключитесь на Google Translate либо DeepL — они определяют язык оригинала сами."
+  },
+  "errMyMemoryQuotaTitle": {
+    "message": "Бесплатная квота MyMemory для этого подключения исчерпана."
+  },
+  "errMyMemoryQuotaBody": {
+    "message": "Это ограничение самого сервиса MyMemory, оно действует на IP-адрес. Переключитесь в настройках на Google Translate — бесплатно, без ключа и аккаунта — или подождите несколько минут и попробуйте снова. Указанный в настройках адрес эл. почты увеличивает дневную квоту MyMemory."
+  },
+  "errQuotaTitle": {
+    "message": "$1 ограничивает частоту запросов с этого подключения.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errQuotaBody": {
+    "message": "$1 временно отклоняет запросы с этого IP-адреса. Аккаунт и вход здесь ни при чём — обычно достаточно подождать несколько минут и повторить. Также можно сменить сервис в настройках.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitle": {
+    "message": "Не удалось перевести ($1).",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitleLocal": {
+    "message": "Не удалось перевести."
+  },
+  "truncatedSwitchToDeepl": {
+    "message": "⚠ Перевод обрезан. Для длинных писем переключитесь в настройках на DeepL."
+  },
+  "truncatedDeepl": {
+    "message": "⚠ Перевод обрезан — письмо длиннее 30 000 символов."
+  }
+}
