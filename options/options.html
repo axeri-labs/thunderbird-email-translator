@@ -121,7 +121,7 @@
         <input type="checkbox" id="translationConsent">
         <label for="translationConsent">
             <div class="setting-title" data-i18n="consentTitle">Allow sending email text for translation</div>
-            <div class="setting-desc" data-i18n="consentDesc">Email Translator does nothing until this is turned on.</div>
+            <div class="setting-desc" data-i18n="consentDesc">Email Translator does nothing until this is turned on. Translating sends the text of the open email to the engine you select below — never the sender, recipients, subject, headers or attachments.</div>
             <div class="setting-desc" style="margin-top:6px;">
                 <code>translate.googleapis.com</code> (Google Translate) ·
                 <code>api.mymemory.translated.net</code> (MyMemory) ·
@@ -164,9 +164,9 @@
         <div class="setting-info">
             <div class="setting-title" data-i18n="providerTitle">Translation engine</div>
             <div class="setting-desc">
-                <div><strong>Google Translate</strong> <span data-i18n="engineGoogleDesc">— free, no account and no key.</span></div>
-                <div><strong>MyMemory</strong> <span data-i18n="engineMyMemoryDesc">— free, no account.</span></div>
-                <div><strong>DeepL</strong> <span data-i18n="engineDeeplDesc">— best quality. Needs a free API key:</span>
+                <div><strong>Google Translate</strong> <span data-i18n="engineGoogleDesc">— free, no account and no key, detects the source language automatically.</span></div>
+                <div><strong>MyMemory</strong> <span data-i18n="engineMyMemoryDesc">— free, no account. Limited per IP address: about 10 requests a minute and 1,000 words a day.</span></div>
+                <div><strong>DeepL</strong> <span data-i18n="engineDeeplDesc">— best quality, 500,000 characters a month free. Needs a free API key:</span>
                     <a href="https://www.deepl.com/pro-api" target="_blank">deepl.com</a></div>
             </div>
             <div id="mymemory-section">
@@ -194,12 +194,12 @@
                         <option value="ko">Korean</option>
                     </select>
                 </div>
-                <div class="key-hint" data-i18n="sourceLangHint">MyMemory cannot detect the source language.</div>
+                <div class="key-hint" data-i18n="sourceLangHint">MyMemory cannot detect the source language, so set the language your emails are written in. It has to differ from the target language, otherwise MyMemory refuses the request. Google Translate and DeepL detect it on their own.</div>
                 <div class="key-field" style="margin-top:8px;">
                     <label for="myMemoryEmail" style="font-size:12px;color:#555;white-space:nowrap;" data-i18n="mmEmailLabel">E-mail (optional):</label>
                     <input type="text" id="myMemoryEmail" placeholder="your@email.com" style="font-size:13px;flex:1;">
                 </div>
-                <div class="key-hint" data-i18n="mmEmailHint">Not a login and not a registration.</div>
+                <div class="key-hint" data-i18n="mmEmailHint">Not a login and not a registration: MyMemory only uses the address to identify the quota, and leaving it empty is fine. Filling it in raises the daily limit from 1,000 to 10,000 words per IP address.</div>
             </div>
             <div id="deepl-section">
                 <div class="key-field">
@@ -219,7 +219,7 @@
         <input type="checkbox" id="autoTranslate">
         <label for="autoTranslate">
             <div class="setting-title" data-i18n="autoTranslateTitle">Auto-translate</div>
-            <div class="setting-desc" data-i18n="autoTranslateDesc">Translate every email as it is opened.</div>
+            <div class="setting-desc" data-i18n="autoTranslateDesc">Translate every email as it is opened. When off, translation starts only when you press the toolbar button.</div>
         </label>
     </div>
     </fieldset>

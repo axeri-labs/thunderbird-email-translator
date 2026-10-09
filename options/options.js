@@ -14,14 +14,25 @@ const statusEl          = document.getElementById("status");
 
 // ── Localization ──────────────────────────────────────────────────────────────
 
-const t = (key) => messenger.i18n.getMessage(key);
+// getMessage answers with an empty string for anything it cannot resolve. Writing
+// that into the page would wipe the English text in the HTML and leave a blank
+// settings page, so an empty answer always means "keep what the HTML says".
+function t(key) {
+    try {
+        return messenger.i18n.getMessage(key) || "";
+    } catch {
+        return "";
+    }
+}
 
-document.title = t("optionsTitle");
+document.title = t("optionsTitle") || document.title;
 for (const el of document.querySelectorAll("[data-i18n]")) {
-    el.textContent = t(el.dataset.i18n);
+    const msg = t(el.dataset.i18n);
+    if (msg) el.textContent = msg;
 }
 for (const el of document.querySelectorAll("[data-i18n-placeholder]")) {
-    el.placeholder = t(el.dataset.i18nPlaceholder);
+    const msg = t(el.dataset.i18nPlaceholder);
+    if (msg) el.placeholder = msg;
 }
 localizeLanguageNames();
 
@@ -103,7 +114,7 @@ async function save() {
         deeplApiKey:         deeplKeyInput.value.trim(),
         autoTranslate:       checkbox.checked
     });
-    statusEl.textContent = t("saved");
+    statusEl.textContent = t("saved") || "Saved.";
     setTimeout(() => { statusEl.textContent = ""; }, 1500);
 }
 
