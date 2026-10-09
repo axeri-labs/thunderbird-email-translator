@@ -1,0 +1,129 @@
+{
+  "extensionDescription": {
+    "message": "Translates the open email into your language and shows it beside the original, inside Thunderbird."
+  },
+  "actionTitle": {
+    "message": "Translate email"
+  },
+  "optionsTitle": {
+    "message": "Email Translator – Settings"
+  },
+  "consentTitle": {
+    "message": "Allow sending email text for translation"
+  },
+  "consentDesc": {
+    "message": "Email Translator does nothing until this is turned on. Translating sends the text of the open email to the engine you select below — never the sender, recipients, subject, headers or attachments."
+  },
+  "targetLangTitle": {
+    "message": "Target language"
+  },
+  "targetLangDesc": {
+    "message": "The language emails are translated into."
+  },
+  "providerTitle": {
+    "message": "Translation engine"
+  },
+  "engineGoogleDesc": {
+    "message": "— free, no account and no key, detects the source language automatically."
+  },
+  "engineMyMemoryDesc": {
+    "message": "— free, no account. Limited per IP address: about 10 requests a minute and 1,000 words a day."
+  },
+  "engineDeeplDesc": {
+    "message": "— best quality, 500,000 characters a month free. Needs a free API key:"
+  },
+  "sourceLangLabel": {
+    "message": "Email language:"
+  },
+  "sourceLangHint": {
+    "message": "MyMemory cannot detect the source language, so set the language your emails are written in. It has to differ from the target language, otherwise MyMemory refuses the request. Google Translate and DeepL detect it on their own."
+  },
+  "mmEmailLabel": {
+    "message": "E-mail (optional):"
+  },
+  "mmEmailHint": {
+    "message": "Not a login and not a registration: MyMemory only uses the address to identify the quota, and leaving it empty is fine. Filling it in raises the daily limit from 1,000 to 10,000 words per IP address."
+  },
+  "deeplKeyPlaceholder": {
+    "message": "DeepL API key"
+  },
+  "deeplKeyHint": {
+    "message": "Get a free key at deepl.com/pro-api — no credit card required."
+  },
+  "autoTranslateTitle": {
+    "message": "Auto-translate"
+  },
+  "autoTranslateDesc": {
+    "message": "Translate every email as it is opened. When off, translation starts only when you press the toolbar button."
+  },
+  "saved": {
+    "message": "Saved."
+  },
+  "panelClose": {
+    "message": "Close translation"
+  },
+  "panelRetry": {
+    "message": "Translate again"
+  },
+  "panelEmpty": {
+    "message": "(empty)"
+  },
+  "bannerTranslating": {
+    "message": "⏳ Translating… ($1)",
+    "description": "$1 is the name of the translation engine, e.g. Google Translate"
+  },
+  "consentOffTitle": {
+    "message": "Email translation is turned off."
+  },
+  "consentOffBody": {
+    "message": "Translating sends the text of this email to an external service. Open Settings and tick “Allow sending email text for translation” to use it."
+  },
+  "noContent": {
+    "message": "No translatable content found in this email."
+  },
+  "errDeeplNoKeyTitle": {
+    "message": "DeepL is selected, but no API key is saved."
+  },
+  "errDeeplNoKeyBody": {
+    "message": "Enter your DeepL API key in Settings, or switch the engine to Google Translate — it needs no key and no account."
+  },
+  "errDeeplAuthTitle": {
+    "message": "DeepL rejected the API key."
+  },
+  "errDeeplAuthBody": {
+    "message": "Check the key in Settings (free keys end in :fx), or switch the engine to Google Translate — it needs no key and no account."
+  },
+  "errSameLangTitle": {
+    "message": "MyMemory needs two different languages."
+  },
+  "errSameLangBody": {
+    "message": "In Settings, “Email language” is the language your emails are written in, and it cannot be the same as the target language. Set it to the language you receive, or switch the engine to Google Translate or DeepL — both detect the source language on their own."
+  },
+  "errMyMemoryQuotaTitle": {
+    "message": "MyMemory's free quota for this connection is used up."
+  },
+  "errMyMemoryQuotaBody": {
+    "message": "This is a limit of the MyMemory service itself, applied per IP address. Switch the engine to Google Translate in Settings — free, no key, no account — or wait a few minutes and try again. Entering an e-mail address in the MyMemory section of Settings raises MyMemory's own daily quota."
+  },
+  "errQuotaTitle": {
+    "message": "$1 is rate-limiting this connection.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errQuotaBody": {
+    "message": "$1 temporarily refused further requests from this IP address. No account or login is involved — waiting a few minutes and trying again usually clears it. You can also switch the engine in Settings.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitle": {
+    "message": "Translation failed ($1).",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitleLocal": {
+    "message": "Translation failed."
+  },
+  "truncatedSwitchToDeepl": {
+    "message": "⚠ Translation truncated. For longer emails, switch to DeepL in Settings."
+  },
+  "truncatedDeepl": {
+    "message": "⚠ Translation truncated — the email exceeds 30,000 characters."
+  }
+}

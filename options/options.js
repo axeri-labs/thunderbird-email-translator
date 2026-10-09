@@ -12,6 +12,69 @@ const deeplSection      = document.getElementById("deepl-section");
 const checkbox          = document.getElementById("autoTranslate");
 const statusEl          = document.getElementById("status");
 
+// ── Localization ──────────────────────────────────────────────────────────────
+
+// getMessage answers with an empty string for anything it cannot resolve. Writing
+// that into the page would wipe the English text in the HTML and leave a blank
+// settings page, so an empty answer always means "keep what the HTML says".
+function t(key) {
+    try {
+        return messenger.i18n.getMessage(key) || "";
+    } catch {
+        return "";
+    }
+}
+
+document.title = t("optionsTitle") || document.title;
+for (const el of document.querySelectorAll("[data-i18n]")) {
+    const msg = t(el.dataset.i18n);
+    if (msg) el.textContent = msg;
+}
+for (const el of document.querySelectorAll("[data-i18n-placeholder]")) {
+    const msg = t(el.dataset.i18nPlaceholder);
+    if (msg) el.placeholder = msg;
+}
+localizeLanguageNames();
+
+// Both lists hold the same language codes in every locale, so the names come
+// from the browser's own language database rather than from 20 translated
+// strings per locale. The English names in options.html stay as the fallback.
+// zh-CN as a language tag reads as "Chinese (China)", so the script subtag is
+// asked for instead: that is what the user actually picks. Where a locale has no
+// compound name for it, ICU falls back to a "language, script" phrase ("Chinese,
+// Simplified Han") that is too long for a dropdown — there, the plain language
+// name is clearer, and the list offers only one Chinese anyway.
+function displayName(names, code) {
+    if (code !== "zh-CN") {
+        const name = names.of(code);
+        return name === code ? "" : name;
+    }
+    const compound = names.of("zh-Hans");
+    if (compound && compound !== "zh-Hans" && !compound.includes(",")) return compound;
+    const plain = names.of("zh");
+    return plain === "zh" ? "" : plain;
+}
+
+function localizeLanguageNames() {
+    let names;
+    try {
+        names = new Intl.DisplayNames(messenger.i18n.getUILanguage(), { type: "language" });
+    } catch {
+        return;
+    }
+    for (const select of [langSelect, sourceLangSelect]) {
+        for (const option of select.options) {
+            let name;
+            try {
+                name = displayName(names, option.value);
+            } catch {
+                continue;
+            }
+            if (name) option.textContent = name[0].toLocaleUpperCase() + name.slice(1);
+        }
+    }
+}
+
 const stored = await messenger.storage.local.get([
     "translationConsent", "targetLang", "translationProvider", "sourceLang",
     "myMemoryEmail", "deeplApiKey", "autoTranslate"
@@ -51,7 +114,7 @@ async function save() {
         deeplApiKey:         deeplKeyInput.value.trim(),
         autoTranslate:       checkbox.checked
     });
-    statusEl.textContent = "Saved.";
+    statusEl.textContent = t("saved") || "Saved.";
     setTimeout(() => { statusEl.textContent = ""; }, 1500);
 }
 

@@ -47,12 +47,12 @@ function injectSplitView(html, text, banner = "") {
 
     const retryBtn = document.createElement("button");
     retryBtn.id = "et-retry";
-    retryBtn.title = "Translate again";
+    retryBtn.title = t("panelRetry");
     retryBtn.appendChild(circularArrowIcon());
 
     const closeBtn = document.createElement("button");
     closeBtn.id = "et-close";
-    closeBtn.title = "Close translation";
+    closeBtn.title = t("panelClose");
     closeBtn.textContent = "✕";
 
     const bannerEl = document.createElement("div");
@@ -141,6 +141,10 @@ function closeSplitView() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function t(key) {
+    return browser.i18n.getMessage(key);
+}
+
 // content can be translated HTML sourced from the email body — untrusted, may still
 // carry event-handler attributes or javascript: URLs after translation.
 function sanitize(html) {
@@ -151,7 +155,7 @@ function buildParagraphs(text) {
     const lines = (text || "").split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
     return lines.length
         ? lines.map(p => `<p>${esc(p)}</p>`).join("")
-        : "<p><em>(empty)</em></p>";
+        : `<p><em>${esc(t("panelEmpty"))}</em></p>`;
 }
 
 function esc(s) {

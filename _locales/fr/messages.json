@@ -1,0 +1,129 @@
+{
+  "extensionDescription": {
+    "message": "Traduit l'e-mail ouvert dans votre langue et l'affiche à côté de l'original, directement dans Thunderbird."
+  },
+  "actionTitle": {
+    "message": "Traduire l'e-mail"
+  },
+  "optionsTitle": {
+    "message": "Email Translator – Paramètres"
+  },
+  "consentTitle": {
+    "message": "Autoriser l'envoi du texte des e-mails pour traduction"
+  },
+  "consentDesc": {
+    "message": "Email Translator ne fait rien tant que cette option n'est pas activée. La traduction envoie le texte de l'e-mail ouvert au moteur sélectionné ci-dessous — jamais l'expéditeur, les destinataires, l'objet, les en-têtes ni les pièces jointes."
+  },
+  "targetLangTitle": {
+    "message": "Langue cible"
+  },
+  "targetLangDesc": {
+    "message": "La langue dans laquelle les e-mails sont traduits."
+  },
+  "providerTitle": {
+    "message": "Moteur de traduction"
+  },
+  "engineGoogleDesc": {
+    "message": "— gratuit, sans compte ni clé, détecte automatiquement la langue source."
+  },
+  "engineMyMemoryDesc": {
+    "message": "— gratuit, sans compte. Limité par adresse IP : environ 10 requêtes par minute et 1 000 mots par jour."
+  },
+  "engineDeeplDesc": {
+    "message": "— meilleure qualité, 500 000 caractères par mois gratuits. Nécessite une clé API gratuite :"
+  },
+  "sourceLangLabel": {
+    "message": "Langue des e-mails :"
+  },
+  "sourceLangHint": {
+    "message": "MyMemory ne détecte pas la langue source : indiquez la langue dans laquelle vos e-mails sont rédigés. Elle doit être différente de la langue cible, sinon MyMemory refuse la demande. Google Translate et DeepL la détectent d'eux-mêmes."
+  },
+  "mmEmailLabel": {
+    "message": "E-mail (facultatif) :"
+  },
+  "mmEmailHint": {
+    "message": "Ce n'est ni une connexion ni une inscription : MyMemory utilise l'adresse uniquement pour identifier le quota, et vous pouvez laisser le champ vide. La renseigner fait passer la limite quotidienne de 1 000 à 10 000 mots par adresse IP."
+  },
+  "deeplKeyPlaceholder": {
+    "message": "Clé API DeepL"
+  },
+  "deeplKeyHint": {
+    "message": "Clé gratuite sur deepl.com/pro-api — sans carte bancaire."
+  },
+  "autoTranslateTitle": {
+    "message": "Traduction automatique"
+  },
+  "autoTranslateDesc": {
+    "message": "Traduire chaque e-mail dès son ouverture. Si désactivé, la traduction ne démarre qu'avec le bouton de la barre d'outils."
+  },
+  "saved": {
+    "message": "Enregistré."
+  },
+  "panelClose": {
+    "message": "Fermer la traduction"
+  },
+  "panelRetry": {
+    "message": "Traduire à nouveau"
+  },
+  "panelEmpty": {
+    "message": "(vide)"
+  },
+  "bannerTranslating": {
+    "message": "⏳ Traduction en cours… ($1)",
+    "description": "$1 is the name of the translation engine, e.g. Google Translate"
+  },
+  "consentOffTitle": {
+    "message": "La traduction des e-mails est désactivée."
+  },
+  "consentOffBody": {
+    "message": "La traduction envoie le texte de cet e-mail à un service externe. Ouvrez les paramètres et cochez « Autoriser l'envoi du texte des e-mails pour traduction »."
+  },
+  "noContent": {
+    "message": "Aucun texte à traduire dans cet e-mail."
+  },
+  "errDeeplNoKeyTitle": {
+    "message": "DeepL est sélectionné, mais aucune clé API n'est enregistrée."
+  },
+  "errDeeplNoKeyBody": {
+    "message": "Saisissez votre clé API DeepL dans les paramètres, ou passez à Google Translate — il ne demande ni clé ni compte."
+  },
+  "errDeeplAuthTitle": {
+    "message": "DeepL a refusé la clé API."
+  },
+  "errDeeplAuthBody": {
+    "message": "Vérifiez la clé dans les paramètres (les clés gratuites se terminent par :fx), ou passez à Google Translate — il ne demande ni clé ni compte."
+  },
+  "errSameLangTitle": {
+    "message": "MyMemory exige deux langues différentes."
+  },
+  "errSameLangBody": {
+    "message": "Dans les paramètres, « Langue des e-mails » est la langue dans laquelle vos e-mails sont rédigés, et elle ne peut pas être identique à la langue cible. Indiquez la langue que vous recevez, ou passez à Google Translate ou DeepL — tous deux détectent la langue source eux-mêmes."
+  },
+  "errMyMemoryQuotaTitle": {
+    "message": "Le quota gratuit de MyMemory pour cette connexion est épuisé."
+  },
+  "errMyMemoryQuotaBody": {
+    "message": "C'est une limite du service MyMemory lui-même, appliquée par adresse IP. Passez à Google Translate dans les paramètres — gratuit, sans clé ni compte — ou patientez quelques minutes avant de réessayer. Renseigner une adresse e-mail dans la section MyMemory des paramètres augmente le quota quotidien de MyMemory."
+  },
+  "errQuotaTitle": {
+    "message": "$1 limite temporairement les requêtes de cette connexion.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errQuotaBody": {
+    "message": "$1 a refusé d'autres requêtes provenant de cette adresse IP. Aucun compte ni aucune connexion n'est en cause — il suffit généralement de patienter quelques minutes et de réessayer. Vous pouvez aussi changer de moteur dans les paramètres.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitle": {
+    "message": "Échec de la traduction ($1).",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitleLocal": {
+    "message": "Échec de la traduction."
+  },
+  "truncatedSwitchToDeepl": {
+    "message": "⚠ Traduction tronquée. Pour les e-mails longs, passez à DeepL dans les paramètres."
+  },
+  "truncatedDeepl": {
+    "message": "⚠ Traduction tronquée — l'e-mail dépasse 30 000 caractères."
+  }
+}

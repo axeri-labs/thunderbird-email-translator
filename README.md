@@ -17,6 +17,8 @@ inside Thunderbird. No account, no sign-up: the default engine needs neither a k
   scratch, for when you have changed a setting or the result was not what you expected.
 - **Nothing leaves your machine until you say so** — translation is disabled until you tick
   *Allow sending email text for translation* in Settings.
+- **Interface in English, French, Russian and Japanese** — it follows Thunderbird's own language,
+  and language names in the settings come from the browser's language database.
 
 ![Settings page](docs/screenshots/settings.png)
 

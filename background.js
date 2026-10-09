@@ -142,12 +142,7 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true, force
         if (!manual) return;
         await send({
             action: "injectSplitView",
-            html: `<p style='color:#444;font-weight:600'>Email translation is turned off.</p>
-                   <p style='font-size:13px;color:#666;margin-top:8px;line-height:1.6'>
-                     Translating sends the email text to an external service (Google Translate,
-                     MyMemory, or DeepL). Open <strong>Settings</strong> and enable
-                     “Allow sending email text for translation” to use this feature.
-                   </p>`,
+            html: noticePanelHtml(t("consentOffTitle"), t("consentOffBody")),
             text: "",
             banner: ""
         });
@@ -158,7 +153,7 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true, force
     // service that actually runs — neither may point at a provider the user
     // didn't pick.
     const providerCfg = await resolveProvider();
-    const busyBanner = `⏳ Translating… (${PROVIDER_LABEL[providerCfg.provider]})`;
+    const busyBanner = t("bannerTranslating", PROVIDER_LABEL[providerCfg.provider]);
 
     await send({ action: "injectSplitView", html: "", text: "", banner: busyBanner });
 
@@ -199,7 +194,7 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true, force
         if (!translation) {
             await send({
                 action: "injectSplitView",
-                html: "<p style='color:#c00'>No translatable content found in this email.</p>",
+                html: `${P_ERR}${escapeHtml(t("noContent"))}</p>`,
                 text: "", banner: ""
             });
             return;
@@ -225,6 +220,12 @@ async function run(message, tabId, gen = bumpTabGen(tabId), manual = true, force
 
 // ── Error reporting ───────────────────────────────────────────────────────────
 
+// Engine names are product names — the same in every locale, so they are not
+// translated, only substituted into translated sentences.
+function t(key, ...subs) {
+    return messenger.i18n.getMessage(key, subs);
+}
+
 const PROVIDER_LABEL = {
     google: "Google Translate",
     mymemory: "MyMemory",
@@ -248,44 +249,45 @@ function errorKind(err) {
 
 const P_ERR = "<p style='color:#c00;font-weight:600'>";
 const P_BODY = "<p style='font-size:13px;color:#444;margin-top:8px;line-height:1.6'>";
+const P_NOTE = "<p style='color:#444;font-weight:600'>";
+const P_NOTE_BODY = "<p style='font-size:13px;color:#666;margin-top:8px;line-height:1.6'>";
 
-// Every panel names the provider the user actually selected, and never asks for
-// an account the selected provider doesn't need.
+// All panel text comes from _locales and is escaped on the way in: the markup
+// lives here, never in a translated string.
 function errorPanelHtml(provider, err) {
     const label = PROVIDER_LABEL[provider] ?? provider;
     const kind = errorKind(err);
 
     if (kind === "config" && provider === "deepl") {
-        return `${P_ERR}DeepL is selected, but no API key is saved.</p>
-                ${P_BODY}Enter your DeepL API key in <strong>Settings</strong>, or switch the engine to
-                <strong>Google Translate</strong> — it needs no key and no account.</p>`;
+        return panel(t("errDeeplNoKeyTitle"), t("errDeeplNoKeyBody"));
     }
     if (kind === "auth" && provider === "deepl") {
-        return `${P_ERR}DeepL rejected the API key.</p>
-                ${P_BODY}Check the key in <strong>Settings</strong> (free keys end in <code>:fx</code>), or switch the
-                engine to <strong>Google Translate</strong> — it needs no key and no account.</p>`;
+        return panel(t("errDeeplAuthTitle"), t("errDeeplAuthBody"));
+    }
+    if (kind === "samelang" && provider === "mymemory") {
+        return panel(t("errSameLangTitle"), t("errSameLangBody"));
     }
     if (kind === "quota" && provider === "mymemory") {
-        return `${P_ERR}MyMemory's free quota for this connection is used up.</p>
-                ${P_BODY}This is a limit of the MyMemory service, applied per IP address.<br><br>
-                <strong>Option 1:</strong> Switch the engine to <strong>Google Translate</strong> in Settings —
-                free, no key, no account.<br>
-                <strong>Option 2:</strong> Wait a few minutes and try again.<br>
-                <strong>Option 3:</strong> Enter an e-mail address in the MyMemory section of Settings — optional,
-                it raises MyMemory's own daily quota.</p>`;
+        return panel(t("errMyMemoryQuotaTitle"), t("errMyMemoryQuotaBody"));
     }
     if (kind === "quota") {
-        return `${P_ERR}${escapeHtml(label)} is rate-limiting this connection.</p>
-                ${P_BODY}${escapeHtml(label)} temporarily refused further requests from this IP address.
-                No account or login is involved — waiting a few minutes and trying again usually clears it.<br><br>
-                You can also switch the engine in <strong>Settings</strong>.</p>`;
+        return panel(t("errQuotaTitle", label), t("errQuotaBody", label));
     }
     // "local" means the failure never reached a translation service (reading the
     // message, injecting the panel): naming a provider there would blame the
     // wrong thing.
-    const blame = kind === "local" ? "" : ` (${escapeHtml(label)})`;
-    return `${P_ERR}Translation failed${blame}.</p>
-            ${P_BODY}${escapeHtml(err.message)}</p>`;
+    const title = kind === "local" ? t("errFailedTitleLocal") : t("errFailedTitle", label);
+    return panel(title, err.message);
+}
+
+function panel(title, body) {
+    return `${P_ERR}${escapeHtml(title)}</p>
+            ${P_BODY}${escapeHtml(body)}</p>`;
+}
+
+function noticePanelHtml(title, body) {
+    return `${P_NOTE}${escapeHtml(title)}</p>
+            ${P_NOTE_BODY}${escapeHtml(body)}</p>`;
 }
 
 // ── Translation providers ─────────────────────────────────────────────────────
@@ -329,7 +331,7 @@ async function fetchTranslationGoogle(fullMessage, targetLang) {
     const MAX = 5000;
     const truncated = text.length > MAX;
     const translated = await googleTranslate(truncated ? text.substring(0, MAX) : text, targetLang);
-    const suffix = truncated ? "\n\n⚠ Translation truncated. Switch to DeepL for longer emails." : "";
+    const suffix = truncated ? `\n\n${t("truncatedSwitchToDeepl")}` : "";
     return { text: translated + suffix };
 }
 
@@ -381,6 +383,11 @@ async function fetchTranslationMyMemory(fullMessage, targetLang) {
     const { sourceLang = "en", myMemoryEmail = "" } =
         await messenger.storage.local.get(["sourceLang", "myMemoryEmail"]);
 
+    // MyMemory rejects a langpair of two identical languages, and its own wording
+    // for that ("PLEASE SELECT TWO DISTINCT LANGUAGES") doesn't say which of the
+    // two settings to change. Catch it here, before the request.
+    if (sourceLang === targetLang) throw new TranslationError("mymemory", "samelang");
+
     const rawHtml = extractHtml(fullMessage);
     if (rawHtml) {
         const bodyHtml = htmlBodyContent(rawHtml);
@@ -400,9 +407,7 @@ async function fetchTranslationMyMemory(fullMessage, targetLang) {
         truncated ? text.substring(0, MAX) : text,
         sourceLang, targetLang, myMemoryEmail
     );
-    const suffix = truncated
-        ? "\n\n⚠ Translation truncated. For longer emails, switch to DeepL in settings."
-        : "";
+    const suffix = truncated ? `\n\n${t("truncatedSwitchToDeepl")}` : "";
     return { text: translated + suffix };
 }
 
@@ -486,11 +491,15 @@ function throwIfMyMemoryFailed(res) {
 // so the panel can explain it as a MyMemory limit instead of passing it through
 // raw — and it can only ever reach a user who selected MyMemory.
 const MM_QUOTA_RE = /MYMEMORY WARNING|QUOTA|ALL AVAILABLE FREE TRANSLATIONS|LOGIN/i;
+const MM_SAMELANG_RE = /TWO DISTINCT LANGUAGES|INVALID LANGUAGE PAIR/i;
 
 function throwIfMyMemoryRejected(data) {
     if (data.responseStatus === 200) return;
     const detail = String(data.responseDetails ?? "unknown error");
-    throw new TranslationError("mymemory", MM_QUOTA_RE.test(detail) ? "quota" : "http", detail);
+    const kind = MM_SAMELANG_RE.test(detail) ? "samelang"
+        : MM_QUOTA_RE.test(detail) ? "quota"
+        : "http";
+    throw new TranslationError("mymemory", kind, detail);
 }
 
 // DeepL — higher quality, preserves HTML structure; requires free API key
@@ -507,7 +516,7 @@ async function fetchTranslationDeepl(fullMessage, targetLang, apiKey) {
                     targetLang, "html", apiKey
                 );
                 const suffix = truncated
-                    ? "<p style='color:#999;font-size:12px;border-top:1px solid #eee;padding-top:8px;'>⚠ Translation truncated — email exceeds 30,000 characters.</p>"
+                    ? `<p style='color:#999;font-size:12px;border-top:1px solid #eee;padding-top:8px;'>${escapeHtml(t("truncatedDeepl"))}</p>`
                     : "";
                 return { html: translatedHtml + suffix };
             } catch (err) {
@@ -528,9 +537,7 @@ async function fetchTranslationDeepl(fullMessage, targetLang, apiKey) {
         truncated ? text.substring(0, MAX) : text,
         targetLang, "text", apiKey
     );
-    const suffix = truncated
-        ? "\n\n⚠ Translation truncated — email exceeds 30,000 characters."
-        : "";
+    const suffix = truncated ? `\n\n${t("truncatedDeepl")}` : "";
     return { text: translated + suffix };
 }
 
