@@ -28,6 +28,22 @@ localizeLanguageNames();
 // Both lists hold the same language codes in every locale, so the names come
 // from the browser's own language database rather than from 20 translated
 // strings per locale. The English names in options.html stay as the fallback.
+// zh-CN as a language tag reads as "Chinese (China)", so the script subtag is
+// asked for instead: that is what the user actually picks. Where a locale has no
+// compound name for it, ICU falls back to a "language, script" phrase ("Chinese,
+// Simplified Han") that is too long for a dropdown — there, the plain language
+// name is clearer, and the list offers only one Chinese anyway.
+function displayName(names, code) {
+    if (code !== "zh-CN") {
+        const name = names.of(code);
+        return name === code ? "" : name;
+    }
+    const compound = names.of("zh-Hans");
+    if (compound && compound !== "zh-Hans" && !compound.includes(",")) return compound;
+    const plain = names.of("zh");
+    return plain === "zh" ? "" : plain;
+}
+
 function localizeLanguageNames() {
     let names;
     try {
@@ -37,16 +53,13 @@ function localizeLanguageNames() {
     }
     for (const select of [langSelect, sourceLangSelect]) {
         for (const option of select.options) {
-            // zh-CN as a language tag reads as "Chinese (China)"; the script
-            // subtag says what the user actually picks: simplified Chinese.
-            const tag = option.value === "zh-CN" ? "zh-Hans" : option.value;
             let name;
             try {
-                name = names.of(tag);
+                name = displayName(names, option.value);
             } catch {
                 continue;
             }
-            if (name && name !== tag) option.textContent = name[0].toLocaleUpperCase() + name.slice(1);
+            if (name) option.textContent = name[0].toLocaleUpperCase() + name.slice(1);
         }
     }
 }
