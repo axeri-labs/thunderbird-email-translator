@@ -1,0 +1,129 @@
+{
+  "extensionDescription": {
+    "message": "Übersetzt die geöffnete E-Mail in Ihre Sprache und zeigt sie neben dem Original an – direkt in Thunderbird."
+  },
+  "actionTitle": {
+    "message": "E-Mail übersetzen"
+  },
+  "optionsTitle": {
+    "message": "Email Translator – Einstellungen"
+  },
+  "consentTitle": {
+    "message": "Senden von E-Mail-Text zur Übersetzung erlauben"
+  },
+  "consentDesc": {
+    "message": "Email Translator tut nichts, solange dies nicht aktiviert ist. Beim Übersetzen wird der Text der geöffneten E-Mail an den unten gewählten Dienst gesendet – niemals Absender, Empfänger, Betreff, Kopfzeilen oder Anhänge."
+  },
+  "targetLangTitle": {
+    "message": "Zielsprache"
+  },
+  "targetLangDesc": {
+    "message": "Die Sprache, in die E-Mails übersetzt werden."
+  },
+  "providerTitle": {
+    "message": "Übersetzungsdienst"
+  },
+  "engineGoogleDesc": {
+    "message": "– kostenlos, ohne Konto und ohne Schlüssel, erkennt die Ausgangssprache automatisch."
+  },
+  "engineMyMemoryDesc": {
+    "message": "– kostenlos, ohne Konto. Pro IP-Adresse begrenzt: etwa 10 Anfragen pro Minute und 1.000 Wörter pro Tag."
+  },
+  "engineDeeplDesc": {
+    "message": "– beste Qualität, 500.000 Zeichen pro Monat kostenlos. Benötigt einen kostenlosen API-Schlüssel:"
+  },
+  "sourceLangLabel": {
+    "message": "Sprache der E-Mails:"
+  },
+  "sourceLangHint": {
+    "message": "MyMemory kann die Ausgangssprache nicht erkennen – geben Sie daher die Sprache an, in der Ihre E-Mails verfasst sind. Sie muss sich von der Zielsprache unterscheiden, sonst lehnt MyMemory die Anfrage ab. Google Translate und DeepL erkennen sie selbst."
+  },
+  "mmEmailLabel": {
+    "message": "E-Mail (optional):"
+  },
+  "mmEmailHint": {
+    "message": "Keine Anmeldung und keine Registrierung: MyMemory verwendet die Adresse nur zur Zuordnung des Kontingents, das Feld darf leer bleiben. Mit Adresse steigt das Tageslimit von 1.000 auf 10.000 Wörter pro IP-Adresse."
+  },
+  "deeplKeyPlaceholder": {
+    "message": "DeepL-API-Schlüssel"
+  },
+  "deeplKeyHint": {
+    "message": "Kostenlosen Schlüssel unter deepl.com/pro-api – keine Kreditkarte nötig."
+  },
+  "autoTranslateTitle": {
+    "message": "Automatisch übersetzen"
+  },
+  "autoTranslateDesc": {
+    "message": "Jede E-Mail beim Öffnen übersetzen. Ist die Option aus, startet die Übersetzung erst über die Schaltfläche in der Symbolleiste."
+  },
+  "saved": {
+    "message": "Gespeichert."
+  },
+  "panelClose": {
+    "message": "Übersetzung schließen"
+  },
+  "panelRetry": {
+    "message": "Erneut übersetzen"
+  },
+  "panelEmpty": {
+    "message": "(leer)"
+  },
+  "bannerTranslating": {
+    "message": "⏳ Übersetzen … ($1)",
+    "description": "$1 is the name of the translation engine, e.g. Google Translate"
+  },
+  "consentOffTitle": {
+    "message": "Die Übersetzung von E-Mails ist deaktiviert."
+  },
+  "consentOffBody": {
+    "message": "Beim Übersetzen wird der Text dieser E-Mail an einen externen Dienst gesendet. Öffnen Sie die Einstellungen und aktivieren Sie „Senden von E-Mail-Text zur Übersetzung erlauben“."
+  },
+  "noContent": {
+    "message": "In dieser E-Mail wurde kein übersetzbarer Text gefunden."
+  },
+  "errDeeplNoKeyTitle": {
+    "message": "DeepL ist ausgewählt, aber es ist kein API-Schlüssel gespeichert."
+  },
+  "errDeeplNoKeyBody": {
+    "message": "Geben Sie Ihren DeepL-API-Schlüssel in den Einstellungen ein oder wechseln Sie zu Google Translate – dafür sind weder Schlüssel noch Konto nötig."
+  },
+  "errDeeplAuthTitle": {
+    "message": "DeepL hat den API-Schlüssel abgelehnt."
+  },
+  "errDeeplAuthBody": {
+    "message": "Prüfen Sie den Schlüssel in den Einstellungen (kostenlose Schlüssel enden auf :fx) oder wechseln Sie zu Google Translate – dafür sind weder Schlüssel noch Konto nötig."
+  },
+  "errSameLangTitle": {
+    "message": "MyMemory benötigt zwei verschiedene Sprachen."
+  },
+  "errSameLangBody": {
+    "message": "In den Einstellungen ist „Sprache der E-Mails“ die Sprache, in der Ihre E-Mails verfasst sind; sie darf nicht mit der Zielsprache übereinstimmen. Stellen Sie die Sprache Ihrer eingehenden E-Mails ein oder wechseln Sie zu Google Translate oder DeepL – beide erkennen die Ausgangssprache selbst."
+  },
+  "errMyMemoryQuotaTitle": {
+    "message": "Das kostenlose MyMemory-Kontingent für diese Verbindung ist aufgebraucht."
+  },
+  "errMyMemoryQuotaBody": {
+    "message": "Das ist eine Begrenzung des Dienstes MyMemory selbst, angewendet pro IP-Adresse. Wechseln Sie in den Einstellungen zu Google Translate – kostenlos, ohne Schlüssel und ohne Konto – oder warten Sie einige Minuten und versuchen Sie es erneut. Eine E-Mail-Adresse im MyMemory-Bereich der Einstellungen erhöht das Tageskontingent von MyMemory."
+  },
+  "errQuotaTitle": {
+    "message": "$1 begrenzt derzeit die Anfragen dieser Verbindung.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errQuotaBody": {
+    "message": "$1 hat weitere Anfragen von dieser IP-Adresse vorübergehend abgelehnt. Konto oder Anmeldung spielen dabei keine Rolle – meist genügt es, einige Minuten zu warten und es erneut zu versuchen. Sie können den Dienst auch in den Einstellungen wechseln.",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitle": {
+    "message": "Übersetzung fehlgeschlagen ($1).",
+    "description": "$1 is the name of the translation engine"
+  },
+  "errFailedTitleLocal": {
+    "message": "Übersetzung fehlgeschlagen."
+  },
+  "truncatedSwitchToDeepl": {
+    "message": "⚠ Übersetzung gekürzt. Wechseln Sie für längere E-Mails in den Einstellungen zu DeepL."
+  },
+  "truncatedDeepl": {
+    "message": "⚠ Übersetzung gekürzt – die E-Mail überschreitet 30.000 Zeichen."
+  }
+}
