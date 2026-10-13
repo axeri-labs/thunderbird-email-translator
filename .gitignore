@@ -2,3 +2,7 @@ _work/
 _releases/
 *.xpi
 .claude
+
+# a hivatalos ATN linter gyorsítótára
+WEBEXT-LINTER-CACHE/
+node_modules/

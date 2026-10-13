@@ -6,6 +6,6 @@ downloaded from.
 
 content/vendor/purify.min.js:
  - Name: DOMPurify
- - Version: 3.4.12
+ - Version: 3.4.17
  - License: Apache-2.0 OR MPL-2.0
- - URL: https://cdn.jsdelivr.net/npm/dompurify@3.4.12/dist/purify.min.js
+ - URL: https://cdn.jsdelivr.net/npm/dompurify@3.4.17/dist/purify.min.js
